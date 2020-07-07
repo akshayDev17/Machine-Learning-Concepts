@@ -26,6 +26,19 @@
 6. [Dataset Shifts](#dataset_shifts)
    1. [Covariate shift](#covariate_shift)
    2. [Prior probability shift](#pps)
+   3. [Concept Drift](#concept_drift)
+   4. [Internal Covariate Shift](#ics)
+   5. Major causes
+      1. [Sample selection bias](#sample_selection_bias)
+      2. [Non-stationary environment](#nse)
+   6. Identification
+      1. Supervised
+         1. xsax
+      2. Unsupervised
+         1. [Statistical Distance](#id_sd)
+         2. [Novelty Detection](#nd)
+         3. [Discriminative distance](#dd)
+7. [AUC-ROC curve](#aucroc)
 
 
 
@@ -313,7 +326,43 @@ this function means *return the arguments of a function that yield its maximum v
 
 # Normalisation<a name="norm"></a>
 
+**Resources**
+
+1. https://medium.com/techspace-usict/normalization-techniques-in-deep-neural-networks-9121bf100d8
+
+**Why?**
+
+1. prevents biasing w.r.t. features that have higher values.
+   1. since it re-scales all values to be 0-1, no bias is created either w.r.t. features having small or large values.
+2. prevents gradient from exploding , restrains it to a bound range
+3. [In this paper](https://arxiv.org/pdf/1805.11604.pdf), authors claims that Batch Norm makes loss surface smoother(i.e. it bounds the magnitude of the gradients much more tightly).
+4. reduces Internal Covariate Shift, which in turn improves training by reducing the training time.
+5. unintended benefit - helps network in Regularization(only slightly, not significantly).
+
+
+
+<img src="images/norm_comparison.png"/>
+
+
+
+
+
 ## Batch Norm<a name="batch_norm"></a>
+
+* normalisation across each feature, by taking a mini-batch from the training sample, calculating mean and standard deviation.
+* xsax
+
+**Problems:**
+
+* batch-size = 1, doesn't allow since stddev = 0.
+* small mini-batch size leads to noisy normalisation, problems while training
+* problem caused in distributed training:
+  * for each different machine used, mini-batch size to be kept the same, or else &gamma; , &beta; will have different values.
+* recurrent activation for each time-step will have different statistical distribution
+  * hence for each time step, repeat this batch normalisation.
+  * space consuming, complex, since forced to compute and store information for each different statistic(each layer at each different time-step)
+
+* [This study](https://arxiv.org/pdf/1805.11604.pdf) claims that using this doesn't primarily solve the internal covariate shift problem, it rather smoothens out the loss surface.
 
 ## Weight Norm<a name="weight_norm"></a>
 
@@ -334,6 +383,11 @@ this function means *return the arguments of a function that yield its maximum v
 
 
 # Dataset Shifts<a name="dataset_shifts"></a>
+
+**Resources**
+
+1. https://towardsdatascience.com/understanding-dataset-shift-f2a5a262a766
+2. https://www.analyticsvidhya.com/blog/2017/07/covariate-shift-the-hidden-problem-of-real-world-data-science/
 
 joint distribution of inputs,outputs differs between the testing and training sets.![equation](https://latex.codecogs.com/gif.latex?%5Ctextrm%7BP%7D_%7B%5Ctextrm%7Btrain%7D%7D%28%5Ctextrm%7By%7D%2C%20%5Ctextrm%7Bx%7D%29%20%5Cne%20%5Ctextrm%7BP%7D_%7B%5Ctextrm%7Btest%7D%7D%28%5Ctextrm%7By%7D%2C%20%5Ctextrm%7Bx%7D%29)
 
@@ -400,6 +454,17 @@ examples where covariate shift causes problems:
    2. estimate the importance by taking the ratio of the estimated densities of test and train.
    3. use these as weights for determining importance of each instance in training data.
    4. rigorous task in higher dimensional data sets.
+3. **Importance re-weighting**
+   1. it is a more generalised idea of the above.
+   2. up weight training instances that are very similar to your test instances.
+   3. trying to change training data set to a distribution similar to test data set.
+   4. unlabelled examples for the test domain required.
+   5. may result in data leakage from the test set.
+   6. <img src="images/importance_reweighting.png"/>
+      left - training set distro., centre - test set distro., size of circles - weights of samples. colour- different kinds of labels. to make the training set *look like the test set*, appropriate re-weighting was done, hence the samples that appear to be small in the right image indicate they will be having less contribution in training the model.
+4. **Adversarial search**
+   1. construct a predictor that is robust to feature-deletion at test time.	
+      1. finding the optimal minimax strategy, may be by either solving a quadratic program or using efficient bundle methods for optimization.
 
 
 
@@ -436,3 +501,227 @@ examples where covariate shift causes problems:
     *  *detrending* the series will help make it stationary.
       * series with low autocorrelation or secular variation won't be easy to *detrend* .
 * ![equation](https://latex.codecogs.com/gif.latex?%5Cbegin%7Balign*%7D%20%26%20%5Ctextrm%7Bfor%20X%7D%5Crightarrow%20%5Ctextrm%7BY%7D%20%2C%20%5C%2C%5Ctextrm%7BP%7D_%7B%5Ctextrm%7Btrain%7D%7D%28%5Ctextrm%7BY%7D%7C%5Ctextrm%7BX%7D%29%20%5Cne%20%5Ctextrm%7BP%7D_%7B%5Ctextrm%7Btest%7D%7D%28%5Ctextrm%7BY%7D%7C%5Ctextrm%7BX%7D%29%2C%20%5Ctextrm%7BP%7D_%7B%5Ctextrm%7Btrain%7D%7D%28%5Ctextrm%7BX%7D%29%20%3D%20%5Ctextrm%7BP%7D_%7B%5Ctextrm%7Btest%7D%7D%28%5Ctextrm%7BX%7D%29%20%5C%5C%20%26%20%5Ctextrm%7Bfor%20Y%7D%5Crightarrow%20%5Ctextrm%7BX%7D%20%2C%20%5C%2C%5Ctextrm%7BP%7D_%7B%5Ctextrm%7Btrain%7D%7D%28%5Ctextrm%7BX%7D%7C%5Ctextrm%7BY%7D%29%20%5Cne%20%5Ctextrm%7BP%7D_%7B%5Ctextrm%7Btest%7D%7D%28%5Ctextrm%7BX%7D%7C%5Ctextrm%7BY%7D%29%2C%20%5Ctextrm%7BP%7D_%7B%5Ctextrm%7Btrain%7D%7D%28%5Ctextrm%7BY%7D%29%20%3D%20%5Ctextrm%7BP%7D_%7B%5Ctextrm%7Btest%7D%7D%28%5Ctextrm%7BY%7D%29%20%5C%5C%20%5Cend%7Balign*%7D) 
+* <img src="images/concept_drift.png" />
+* **example**:
+  * examined the profits of companies before the 2008 financial crisis
+  * made an algorithm to predict the profit based on factors such as the industry, number of employees, information about products, and so on.
+  * algorithm is trained on data from 2000–2007, but didn't use the dataset for 2008
+  * overall relationship between the inputs and outputs changed due to the new socio-economic environment for the year 2008.
+  * if these are not reflected in our variables (such as having a dummy variable for the date that the  financial crisis occurred and training data before and after this date) then our model is going to  suffer the consequences of concept shift.
+  * here it can be imagined that the train data = 2000-2007, test-data = 2008, hence there is a large difference between the ***concept***, hence the difference in distributions.
+
+
+
+
+
+## Internal Covariate Shift<a name="ics"></a>
+
+1. suspected influence of covariance shift in the hidden layers of deep neural networks has caused the community to focus on this topic(hence the name *internal*)
+2. distribution of activations for any hidden NN layer(this activation will be used as an input for ) may have the covariate shift problem which can impede the training of deep neural networks.
+3. this problem was tackled in the [batch normalisation](https://arxiv.org/pdf/1502.03167.pdf) paper.
+4. internal covariate shift in the hidden layers slows down training and requires lower learning rates and  careful parameter initialization. 
+
+
+
+
+
+## Major causes - Sample selection bias<a name="sample_selection_bias"></a>
+
+* systematic flaw in the process of data collection or labelling.
+* a form of covariance shift induced.
+* misrepresentation of the operating environment such that our model optimizes its training  environment to a factitious or cherry-picked operating environment.
+* highly imbalanced domains(where the domain itself is defined to have skewed distribution and densities for all classes/labels), minority class is particularly sensitive to singular classification errors, due to the typically low number of samples it presents.
+  * <img src="images/sample_bias.png"/>
+    train - cherry picked environment to suit the model
+    test - actual operating environment of the model
+  * In the most extreme cases, a single misclassified example of the minority class can create a significant drop in performance.
+
+
+
+
+
+
+
+## Major causes - Non-stationary environment<a name="nse"></a>
+
+* data varies w.r.t. time and space
+  * for instance, for the problems of spam detection and network intrusion detection
+* existence of an adversary that tries to work around the existing classifier’s learned concepts. 
+* In terms of the machine learning task, this adversary warps the test set so that it becomes different from the training set, thus introducing any possible kind of dataset shift.
+  * here by test set, we mean the operating environment of the ML classifier, which, keep in mind, is a non-stationary environment.
+* once dataset shift is achieved, the adversary can appear to be in the class of *not intruded* while still managing to successfully intrude <u>undetected</u>.
+
+
+
+## Identification
+
+<img src="images/dataset_shift_id.png" />
+
+* unsupervised methods most useful ways, since no post-hoc analysis required.
+
+
+
+## Statistical Distance<a name="id_sd"></a>
+
+* detecting if your model predictions change over time.
+*  form histograms of your training data, keep track of them over time, and compare them to see any  changes.
+  * also get to check if the most important features change over time.
+* commonly used by financial institutions on credit-scoring models.
+
+1. Population stability index(PSI)
+2. Kolmogrov-Smirnov statistic(KS)
+3. Kullback-leibler divergence(KL divergence)
+4. histogram intersections(HI)
+
+*  not great for high-dimensional or sparse features. 
+* <img src="images/statistical_distance.png" />
+  the left has almost little to no covariate shift, but the right one, due to lower values of HI, or higher values of PSI/KS
+* Correction:
+  * PSI is used in risk management and an arbitrary value of 0.25 is used as the limit, above which this is deemed as a major shift.
+  * such features are removed.
+
+
+
+
+
+## Novelty Detection<a name="nd"></a>
+
+* more effective to fairly complex domains such as computer vision.
+* create a model that models(predicts) the source distribution(as some function)
+* Given a new data point, model tries to test what is the likelihood that this data point is drawn from the source distribution. 
+* techniques such as one-class SVMs.
+* <img src="images/novelty_detection.png" />
+* domain of homogeneous but very complex interactions (e.g. visual, audio, or remote sensing), this is the goto method, [SD](#id_sd) won't yield any fruitful results, usually.
+* ![equation](https://latex.codecogs.com/gif.latex?%7B%5Ccolor%7BRed%7D%20%5Ctextrm%7Bcannot%20tell%20you%20explicitly%20what%20has%20changed%2C%20only%20that%20there%20has%20been%20a%20change.%7D%7D)
+
+
+
+
+
+
+
+## Discriminative distance<a name="dd"></a>
+
+* a classifier built to detect whether a sample belongs to training(source domain) or testing set(target domain)
+* distance between distributions used.
+* sometimes, training error used as a proxy for this distance
+  * the higher the error, the more these distributions are closer, indicating classifier is unable to discriminatingly identify the sample
+* useful technique for domain adaptation.
+* good for high-dimensional and sparse data
+
+
+
+
+
+
+
+
+
+# AUC-ROC curve<a name="aucroc"></a>
+
+**Resources**
+
+1. [https://www.analyticsvidhya.com/blog/2020/06/auc-roc-curve-machine-learning/#:~:text=The%20Area%20Under%20the%20Curve,the%20positive%20and%20negative%20classes.](https://www.analyticsvidhya.com/blog/2020/06/auc-roc-curve-machine-learning/#:~:text=The Area Under the Curve,the positive and negative classes.)
+
+
+
+Area under the curve(AUC) of Receiver Operator Characteristic(ROC)
+
+
+
+
+
+
+
+# Confusion matrix<a name="conf_mat"></a>
+
+* N ![equation](https://latex.codecogs.com/gif.latex?%5Ctimes)N matrix, N = number of target classes.
+
+* for binary-classification
+  <img src="images/binary_conf_mat.webp"/>
+
+  * The target variable has two values: **Positive** or **Negative**
+
+  * The **columns** represent the **actual values** of the target variable
+
+  * The **rows** represent the **predicted values** of the target variable
+
+  * **True Positive (TP)** 
+
+    - The predicted value matches the actual value
+    - The actual value was positive and the model predicted a positive value
+
+    **True Negative (TN)** 
+
+    - The predicted value matches the actual value
+    - The actual value was negative and the model predicted a negative value
+
+    **False Positive (FP) – Type 1 error**
+
+    - The predicted value was falsely predicted
+    - The actual value was negative but the model predicted a positive value
+    - Also known as the **Type 1 error**
+
+    **False Negative (FN) – Type 2 error**
+
+    - The predicted value was falsely predicted
+    - The actual value was positive but the model predicted a negative value
+    - Also known as the **Type 2 error**
+
+
+
+## Accuracy, Precision, Recall, F1-score<a name="metrics"></a>
+
+* consider the problem of covid at hand, binary classification of sick people from healthy people.
+* dataset at hand is highly imbalanced, out of 1000 samples, 940 are healthy, and only the rest are sick.
+
+
+
+### Accuracy<a name="acc"></a>
+
+* ![equation](https://latex.codecogs.com/gif.latex?%5Ctextrm%7BAccuracy%7D%20%3D%20%5Cfrac%7B%5Ctextrm%7BTP&plus;TN%7D%7D%7B%5Ctextrm%7BTP&plus;TN&plus;FP&plus;FN%7D%7D)
+* TP = 30, TN = 930, FP = 30, FN = 10
+* hence, accuracy = 96%, which might mean that 96% of the samples correctly.
+* **but it actually means **that it can identify that out of every 100 given people, it can predict correctly for 96 people only, while it is unsure of the remaining 4(which could be devastating if it turns out that all these have the virus and are roaming freely, imagine its was the entire world population, i.e. 7 billion(7,000,000,000) then it was unable to predict for 280,000,000 i.e. 280M :worried:).
+* hence for a contagion virus like the coronavirus, this metric is incorrect for model-evaluation.
+  * the model should actually tell how many positive cases(infected/sick) exist, so as to restrict them from spreading the virus further into healthy people.
+  * out of the correctly predicted cases, how many are positive cases to check the reliability of our model.
+
+
+
+### Precision<a name="prec"></a>
+
+* *tells us how many of the correctly predicted cases actually turned out to be positive.*
+* ![equation](https://latex.codecogs.com/gif.latex?%5Ctextrm%7BPrecision%7D%20%3D%20%5Cfrac%7B%5Ctextrm%7BTP%7D%7D%7B%5Ctextrm%7BTP&plus;FP%7D%7D%20%3D%5Cfrac%7B%5Ctextrm%7B30%7D%7D%7B%5Ctextrm%7B30&plus;30%7D%7D%3D%5Ctextrm%7B0.5%7D) i.e. if suppose 100 people get tested through this model, and the model tells that all of them are sick(positive), then the model would only be able to guarantee that 50 of them are perfectly sick.
+* useful metric in cases where False Positive is a higher concern than False Negatives.
+  * hence, if precision is low, in such disease-prediction models, it would cause an unnecessary panic among people, since most of them aren't sick, but out model told them otherwise.
+  * Precision is important in music or video recommendation systems, e-commerce websites, etc. 
+    * Wrong results could lead to customer churn and be harmful to the business.
+
+
+
+
+
+### Recall<a name="recall"></a>
+
+* *tells us how many of the actual positive cases we were able to predict correctly with our model.*
+* ![equation](https://latex.codecogs.com/gif.latex?%5Ctextrm%7BRecall%7D%20%3D%20%5Cfrac%7B%5Ctextrm%7BTP%7D%7D%7B%5Ctextrm%7BTP&plus;FN%7D%7D%20%3D%20%5Cfrac%7B%5Ctextrm%7B30%7D%7D%7B%5Ctextrm%7B30&plus;10%7D%7D%3D%5Ctextrm%7B0.75%7D) ,75% of the positives were successfully predicted by our model.
+* useful metric in cases where False Negative trumps False Positive.
+  * in our disease example, recall would be the go-to metric, because out of the total infected population, our model should aim at predicting all of them to be sick, and currently its predicting 75% of them to be sick.
+  * if recall would have been low, results from the model would lead to the person being accidentally discharge and let them mix with the healthy population thereby spreading the contagious virus.
+
+
+
+
+
+### F1-score<a name="f_score"></a>
+
+* also called f-measure, f-score .
+* harmonic mean of precision and recall, i.e. ![equation](https://latex.codecogs.com/gif.latex?%5Cdpi%7B120%7D%20%5Ctextrm%7BF1%7D%20%3D%20%5Cfrac%7B%5Ctextrm%7B2%7D%7D%7B%5Cfrac%7B1%7D%7B%5Ctextrm%7Bprecision%7D%7D&plus;%5Cfrac%7B1%7D%7B%5Ctextrm%7Brecall%7D%7D%7D%20%3D%5Cfrac%7B%5Ctextrm%7B2%7D%7D%7B%5Cfrac%7B1%7D%7B%5Ctextrm%7B0.5%7D%7D&plus;%5Cfrac%7B1%7D%7B%5Ctextrm%7B0.75%7D%7D%7D%20%3D%20%5Ctextrm%7B0.6%7D)
+* In practice, when we try to increase the precision of our model, the recall goes down, and vice-versa.
+* F1 is maximum when precision and recall are both equal.
+
+
+
+**[Follow this code for visualising](../src/confusion_matrix/main.ipynb)**
+
