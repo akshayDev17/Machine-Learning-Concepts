@@ -16,10 +16,10 @@
 3. [Argmax](#argmax)
 4. [Preprocessing for NLP tasks](#preproc_NLP)
 5. [Numerical normalisation](#norm)
-   1. Batch Norm
-   2. Weight Norm
-   3. Layer Norm
-   4. Instance Norm
+   1. [Batch Norm](#batch_norm)
+   2. [Weight Norm](#weight_norm)
+   3. [Layer Norm](#layer_norm)
+   4. [Instance Norm](#instance_norm)
    5. [Group Norm](#group_norm)
    6. [Batch-Instance Norm](#batch_instance_norm)
    7. [Switchable Norm](#switchable_norm)
@@ -39,6 +39,17 @@
          2. [Novelty Detection](#nd)
          3. [Discriminative distance](#dd)
 7. [AUC-ROC curve](#aucroc)
+   1. [Multiclass classfication](#auc_roc_multiclass)
+8. [Confusion matrix](#conf_mat)
+   1. [Metrics](#metrics)
+      1. [Accuracy](#acc)
+      2. [Precision](#prec)
+      3. [Recall](#recall)
+      4. [F-score](#f_score)
+   2. [For multi-class classification](#conf_mat_multiclass)
+9. [Entropy Loss](#epl)
+   1. [Sparse categorical crossentropy](#scc)
+   2. [Categorical Crossentropy](#cc)
 
 
 
@@ -343,14 +354,19 @@ this function means *return the arguments of a function that yield its maximum v
 
 <img src="images/norm_comparison.png"/>
 
-
+N as the batch axis, C as the channel axis, and (H, W) as the spatial axes. The pixels in blue are normalized by the same mean and variance, computed by aggregating the values of these pixels.
 
 
 
 ## Batch Norm<a name="batch_norm"></a>
 
 * normalisation across each feature, by taking a mini-batch from the training sample, calculating mean and standard deviation.
-* xsax
+* for a layer l(if l = 1, i..e the first layer, then the input-samples get normalised)
+  ![equation](https://latex.codecogs.com/gif.latex?%5Cbegin%7Balign*%7D%20%26%5Ctextrm%7Bfor%20neurons%201....m%20of%20layer%20l%2C%20where%20activations/input%20are%20%7D%5Ctextrm%7Bz%7D%5E%7B%5Ctextrm%7B%5Bl%5D%7D%28%5Ctextrm%7B1%7D%29%7D%2C%20%5Ctextrm%7Bz%7D%5E%7B%5Ctextrm%7B%5Bl%5D%7D%28%5Ctextrm%7B2%7D%29%7D%2C%20%5Ctextrm%7Bz%7D%5E%7B%5Ctextrm%7B%5Bl%5D%7D%28%5Ctextrm%7B3%7D%29%7D.......%5Ctextrm%7Bz%7D%5E%7B%5Ctextrm%7B%5Bl%5D%7D%28%5Ctextrm%7Bm%7D%29%7D%20%5C%5C%20%26%5Cmu%5E%7B%5Ctextrm%7B%5Bl%5D%7D%7D%20%3D%20%5Cfrac%7B1%7D%7B%5Ctextrm%7Bm%7D%7D%5Csum%5Climits_%7B%5Ctextrm%7Bi%3D1%7D%7D%5E%7B%5Ctextrm%7Bm%7D%7D%5Ctextrm%7Bz%7D%5E%7B%5Ctextrm%7B%5Bl%5D%7D%28%5Ctextrm%7Bi%7D%29%7D%2C%5C%2C%20%28%5Csigma%5E%7B%5Ctextrm%7B%5Bl%5D%7D%7D%29%5E%7B%5Ctextrm%7B2%7D%7D%20%3D%20%5Cfrac%7B1%7D%7B%5Ctextrm%7Bm%7D%7D%5Csum%5Climits_%7B%5Ctextrm%7Bi%3D1%7D%7D%5E%7B%5Ctextrm%7Bm%7D%7D%28%5Ctextrm%7Bz%7D%5E%7B%5Ctextrm%7B%5Bl%5D%7D%28%5Ctextrm%7Bi%7D%29%7D-%5Cmu%5E%7B%5Ctextrm%7B%5Bl%5D%7D%7D%29%5E%7B%5Ctextrm%7B2%7D%7D%20%5C%5C%20%26%20%5Ctextrm%7Bz%7D%5E%7B%5Ctextrm%7B%5Bl%5D%7D%28%5Ctextrm%7Bi%7D%29%7D_%7B%5Ctextrm%7Bnorm%7D%7D%20%3D%20%5Cfrac%7B%5Ctextrm%7Bz%7D%5E%7B%5Ctextrm%7B%5Bl%5D%7D%28%5Ctextrm%7Bi%7D%29%7D-%5Cmu%5E%7B%5Ctextrm%7B%5Bl%5D%7D%7D%7D%7B%5Csigma%5E%7B%5Ctextrm%7B%5Bl%5D%7D%7D&plus;%5Cepsilon%7D%20%5Cend%7Balign*%7D)
+* this guarantees mean=0, variance=1. &epsilon; = stability constant.
+* if a different distribution is desired
+  ![equation](https://latex.codecogs.com/gif.latex?%5Ctilde%7B%5Ctextrm%7Bz%7D%7D%5E%7B%5Ctextrm%7B%5Bl%5D%7D%28%5Ctextrm%7Bi%7D%29%7D%20%3D%20%5Cgamma%20%5Ctextrm%7Bz%7D%5E%7B%5Ctextrm%7B%5Bl%5D%7D%28%5Ctextrm%7Bi%7D%29%7D_%7B%5Ctextrm%7Bnorm%7D%7D%20&plus;%20%5Cbeta) where &gamma; and &beta; are learnable parameters.
+* this value **m** can either be all neurons/sample , or a portion of either(the latter is referred to as a min-batch)
 
 **Problems:**
 
@@ -366,7 +382,20 @@ this function means *return the arguments of a function that yield its maximum v
 
 ## Weight Norm<a name="weight_norm"></a>
 
+* normalise weights instead of activations/input.
+* ![equation](https://latex.codecogs.com/gif.latex?%5Comega%20%3D%20%5Cfrac%7B%5Ctextrm%7Bg%7D%7D%7B%7C%7C%5Cnu%7C%7C%7D%20%5Cnu), where ||&nu;|| = determinant of weight-matrix &nu;.
+* authors use a combination of mean batch normalisation and weight normalisation, i.e. subtract the activation/input from their mini-batch mean value, but don't divide by the corresponding variance. 
+  * Instead, normalise the weights, and then do the feed-forward part.
+  * Mean is less noisy as compared to variance(which above makes mean a good choice over variance) due to the[ law of large numbers](https://whatis.techtarget.com/definition/law-of-large-numbers).
+  * this technique achieved the best results on CIFAR-10.
+
+
+
+
+
 ## Layer Norm<a name="layer_norm"></a>
+
+
 
 ## Instance Norm<a name="instance_norm"></a>
 
@@ -437,7 +466,7 @@ examples where covariate shift causes problems:
    3. train-test split of 75%,
       1. for each feature, let origin be the target variable,<font color="red"> such that we perform binary classification</font>.
       2. train the model on the 75% data as training set
-      3. test on the remaining 25%, calculate the [AUC-ROC](https://www.analyticsvidhya.com/blog/2020/06/auc-roc-curve-machine-learning/#:~:text=The Area Under the Curve,the positive and negative classes.) value
+      3. test on the remaining 25%, calculate the [AUC-ROC](#aucroc) value
       4. if the AUC-ROC value > 0.8, that covariate drift exists along that feature.
       5. such features are referred to as *drifting features*.
 3. **Cross-validation** is almost unbiased without covariate shift but it is heavily biased under covariate shift.
@@ -627,7 +656,55 @@ examples where covariate shift causes problems:
 
 Area under the curve(AUC) of Receiver Operator Characteristic(ROC)
 
+Sensitivity(true positive rate, TPR), also referred to as [recall](#recall).
 
+1. False negative rate(FNR)
+   1. what % of positive predictions were falsely classified
+   2. ![equation](https://latex.codecogs.com/gif.latex?%5Cdpi%7B120%7D%20%5Ctextrm%7BFNR%7D%3D%5Cfrac%7B%5Ctextrm%7BFN%7D%7D%7B%5Ctextrm%7BTP&plus;FN%7D%7D)
+   3. higher recall implies lower FNR, which is desirable.
+2. Specificity/True negative rate(TNR)
+   1. what proportion of the negative class got correctly classified, ![equation](https://latex.codecogs.com/gif.latex?%5Ctextrm%7BTNR%20%3D%20%7D%5Cfrac%7B%5Ctextrm%7BTN%7D%7D%7B%5Ctextrm%7BTN&plus;FP%7D%7D) 
+   2. determining the proportion of healthy people who were correctly identified by the model.
+3. False positive rate(FPR)
+   1. what proportion of the negative class got incorrectly classified by the classifier, ![equation](https://latex.codecogs.com/gif.latex?%5Ctextrm%7BFPR%20%3D%20%7D%5Cfrac%7B%5Ctextrm%7BFP%7D%7D%7B%5Ctextrm%7BTN&plus;FP%7D%7D) = 1 - specificity
+   2. higher TNR and a lower FPR is desirable since we want to correctly classify the negative class.
+
+
+
+##Probability of predictions<a name="prob_pred"></a> 
+
+1. instead of a model spewing out just the predicted label of a given sample, it would be much better from an analytics standpoint if it instead gave probability distribution w.r.t. each label, given a sample.
+2. on having such a model, we can arbitrarily set a threshold value, so as to determine whether a sample belongs to a particular class or not.
+3. the choice of this threshold greatly affects the value of the metrics discussed above.
+4.  generate a plot between some of these metrics so that we can easily visualize which threshold is giving us a better result.
+   1. this is handled by the AUC-ROC curve.
+5. <img src="images/prediction_probability.png" />
+
+
+
+* the curve plots TPR against FPR, thus separating *signal from noise*.
+* the area under this curve is the measure of ability of a classifier to distinguish between classes.
+* The higher the AUC, the better the performance of the model at distinguishing between the positive and negative classes.
+* <img src="images/ideal_auc_roc.png"/>
+* When AUC=0.5, then the classifier is not able to distinguish between Positive and Negative class points. Meaning either the classifier is predicting random class or constant class for all the data points.
+  <img src="images/auc_half.png" />
+
+
+
+
+
+### AUC-ROC Multi-class classification<a name="auc_roc_multiclass"></a>
+
+So, if we have three classes 0, 1, and 2, the ROC for class 0 will be generated as classifying 0 against not 0, i.e. 1 and 2. The ROC for class 1 will be generated as classifying 1 against not 1, and so on.
+
+[refer this to relate to confusion matrix](#conf_mat_multiclass)
+
+
+
+* for the neural network AUC-ROC curve, if the y_true is of the form y_true = [[0, 0, 1], 
+            [1, 0, 0], 
+            [0, 0, 1]], then use **categorical crossentropy** as the loss-metric
+* if the y_true if of the form = [0], [1], [2] (already in a one-hot encoded fashion), then **sparse categorical crossentropy** is to be used as  the loss-metric.
 
 
 
@@ -725,3 +802,69 @@ Area under the curve(AUC) of Receiver Operator Characteristic(ROC)
 
 **[Follow this code for visualising](../src/confusion_matrix/main.ipynb)**
 
+
+
+
+
+## For multi-class classification<a name="conf_mat_multiclass"></a>
+
+* consider a task to predict users' favourite app among FB, insta, snapchat.
+
+* <img src="images/multiclass_conf_mat.webp"/>
+
+* all *+ve* mean that our prediction matched the actual app that the user liked, all such samples will constitute the TP set for each class label, i.e.
+
+* all *-ve* mean that our prediction mismatched with the actual app that the user liked.
+
+* | App-name | TP     | TN(model predicts the app isn't X and it turns out the favourite also wasn't X) | FP              | FN(model predicts the app isn't X but it turns out that the favourite app is X) |
+  | -------- | ------ | ------------------------------------------------------------ | --------------- | ------------------------------------------------------------ |
+  | FB       | cell-1 | cell-5+cell-6+cell-8+cell-9                                  | cell-2 + cell-3 | cell-4+cell-7                                                |
+  | insta    | cell-5 | cell-1+cell-3+cell-7+cell-9                                  | cell-4+cell-6   | cell-2+cell-8                                                |
+  | snapchat | cell-9 | cell-1+cell-2+cell-4+cell-5                                  | cell-7+cell-8   | cell-3+cell-6                                                |
+
+
+
+
+
+
+# Entropy Loss<a name="epl"></a>
+
+## Sparse categorical crossentropy<a name="scc"></a>
+
+1. converts 
+
+   ```python
+   y_true = [[0, 0, 1], 
+             [1, 0, 0], 
+             [0, 0, 1]]
+   ```
+
+   to 
+   y_true_one_hot = [2, 0, 2]
+
+
+
+## Categorical crossentropy<a name="cc"></a>
+
+1. ```python
+   y_true = [[0, 0, 1],
+             [1, 0, 0],
+             ...
+             [0, 0, 1]]
+   where len(y_true) = num_samples, len(y_true[0]) = num_classes
+   ```
+
+   to
+
+   ```python
+   y_pred = [[0.1, 0.1, 0.8],
+             [0.5, 0.2, 0.3],
+             ...
+             [0.0, 0.2, 0.8]]
+   # this is in the form of predicted
+   # probabilities of each class
+   ```
+
+
+
+[Follow more here](https://cwiki.apache.org/confluence/display/MXNET/Multi-hot+Sparse+Categorical+Cross-entropy#:~:text=Categorical Cross Entropy-,Definition,only belong to one class.)
