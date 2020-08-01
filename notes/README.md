@@ -708,6 +708,8 @@ So, if we have three classes 0, 1, and 2, the ROC for class 0 will be generated 
 
 
 
+[REFER THIS FOR THE CODE](../src/auc_roc/auc_roc.ipynb)
+
 
 
 # Confusion matrix<a name="conf_mat"></a>
