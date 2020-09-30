@@ -48,6 +48,7 @@
    1. [Sparse categorical crossentropy](#scc)
    2. [Categorical Crossentropy](#cc)
 10. [Curse of dimensionality](#cod)
+11. [Cross-validation](#cv)
 
 
 
@@ -858,3 +859,51 @@ So, if we have three classes 0, 1, and 2, the ROC for class 0 will be generated 
 * this continues till a threshold value(provided number of features) is reached, beyond which the accuracy will start to decrease
 * this is the curse of dimensionality
 * in addition to this, if the size of the feature space increases **exponentially**, the model gets <u>confused</u> , since its being provided much more information that it can handle and also might not even be essential for an accurate prediction
+
+
+
+
+
+# Cross-validation<a name="cv"></a>
+
+1. used as a safety method, against a scenario where train-test split might not be random, thus still causing the model to be overfitted
+   1. not a random split means that a split that might result samples having a common feature value(for eg. only people having salary in the bracket $100K/yr exist in the test data) to be clubbed into test-data, and other samples getting clubbed into train-data
+2.  In cross-validation, we split our data into k subsets, and train on k-1 one of those subset. 
+   1. What we do is to hold the last subset for test. 
+   2. We’re able to do it for each of the subsets.
+   3. <img src="images/cv-demo.png"/>
+3. 2 main types of cross-validation methods:
+   1. k-fold cv
+   2. leave one out CV
+
+
+
+## K-fold cross-validation<a name="k-fold"></a>
+
+1. split our data into k different subsets (or folds). 
+2. Use k-1 subsets to train our data and leave the last subset (or the last fold) as test data. 
+3. We then average the model against each of the folds and then finalize our model. 
+4. After that we test it against the test set.
+5. <img src="images/k-fold-cv.png" />
+6. `kf = KFold(n_splits=2) # Define the split - into 2 folds`, here the n_splits is the parameter equivalent to k, hence in this snippet, k = 2, i.e. 
+   `kf.get_n_splits(X) # returns the number of splitting iterations in the cross-validator`
+
+
+
+
+
+## Leave-one-out CV<a name="loocv"></a>
+
+1. the number of folds (subsets) equals to the number of observations we have in the dataset
+2. average ALL of these folds and build our model with the average
+3.  test the model against the last fold
+4.  this method is very computationally expensive and should be used on small datasets
+   1. try using on an under-sampling dataset(under-sampling done to resolve the imbalanced classification)
+
+
+
+* for both methods, as the number of folds are increased
+  * <font color="red">memory and time complexity increase</font>
+  * <font color="red">erorr due to variance increases</font>
+  * <font color="green">error due to bias decreases</font>
+* [Splitter class](https://scikit-learn.org/stable/modules/classes.html#module-sklearn.model_selection) in this link contains the various types of cross-validation methods that can be performed, using the `sklearn-module` .
