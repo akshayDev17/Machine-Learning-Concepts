@@ -49,6 +49,7 @@
    2. [Categorical Crossentropy](#cc)
 10. [Curse of dimensionality](#cod)
 11. [Cross-validation](#cv)
+12. [Method of lagrangian multiplier](#lagrangian)
 
 
 
@@ -907,3 +908,13 @@ So, if we have three classes 0, 1, and 2, the ROC for class 0 will be generated 
   * <font color="red">erorr due to variance increases</font>
   * <font color="green">error due to bias decreases</font>
 * [Splitter class](https://scikit-learn.org/stable/modules/classes.html#module-sklearn.model_selection) in this link contains the various types of cross-validation methods that can be performed, using the `sklearn-module` .
+
+
+
+
+
+# Method of Lagrangian Multipliers<a name="lagrangian"></a>
+
+1. consider the function to be optimised:
+   	![equation](https://latex.codecogs.com/gif.latex?%5Ctextrm%7Bf%28x%29%20%3D%20%7D8x%5E2-2y), under the constraint g(x, y) : ![equation](https://latex.codecogs.com/gif.latex?x%5E2%20&plus;%20y%5E2%20%3D%201)
+2. 
