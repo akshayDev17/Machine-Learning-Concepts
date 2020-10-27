@@ -50,6 +50,8 @@
 10. [Curse of dimensionality](#cod)
 11. [Cross-validation](#cv)
 12. [Method of lagrangian multiplier](#lagrangian)
+13. [Univariate, Bi-variate, Multi-variate Analysis](#mva)
+14. [Bias-Variance Tradeoff](#bias-variance)
 
 
 
@@ -917,4 +919,80 @@ So, if we have three classes 0, 1, and 2, the ROC for class 0 will be generated 
 
 1. consider the function to be optimised:
    	![equation](https://latex.codecogs.com/gif.latex?%5Ctextrm%7Bf%28x%29%20%3D%20%7D8x%5E2-2y), under the constraint g(x, y) : ![equation](https://latex.codecogs.com/gif.latex?x%5E2%20&plus;%20y%5E2%20%3D%201)
-2. 
+
+
+
+
+
+# Univariate, Bi-variate, Multi-variate Analysis<a name="mva"></a>
+
+1. univariate
+   1. plot of a single feature
+   2. x type of graph, y = 0(or some constant value)
+   3. used mainly for creating histograms
+   4. if the data ends up being aligned into certain number of bags that are distinct and roughly represent the output-label space, this means that using just this feature, we are able to classify upto some accuracy
+   5. if distinct bags aren't visible, then jump to bi-variate analysis
+2. bi-variate
+   1. now take 2 features and plot the distribution of all samples accordingly
+   2. x vs y plot
+   3. if distinct clusters seen, these 2 features may be more related to labels  
+   4. if not, skip to multi-variate analysis
+3. multi-variate
+   1. `seaborn.pairplot()` is usually used
+   2. these are pairwise plots of any 2 features
+   3. these can be used to find out if any correlation exists between 2 features
+
+
+
+
+
+# Bias-variance Tradeoff<a name="bias-variance"></a>
+
+
+
+## Bias
+
+* difference between prediction from model and actual output
+* Model with high bias pays very little attention to the training data and oversimplifies the model. 
+* It always leads to high error on training and test data.
+* Examples of **low-bias** machine learning algorithms include: Decision Trees, k-Nearest Neighbors and Support Vector Machines.
+* Examples of **high-bias** machine learning algorithms include: Linear Regression, Linear Discriminant Analysis and Logistic Regression
+
+
+
+## Variance
+
+* variability of model prediction for a given data point or a value which tells us spread of our data. 
+* Model with high variance pays a lot of attention to training data and **does not generalize** on the data which it hasn’t seen before. 
+* As a result, such models perform very well on training data but have **high error rates on test data**.
+* **Low Variance**: Suggests small changes to the estimate of the target function with changes to the training dataset.
+* **High Variance**: Suggests large changes to the estimate of the target function with changes to the training dataset.
+* Examples of **low-variance** machine learning algorithms include: Linear Regression, Linear Discriminant Analysis and Logistic Regression.
+* Examples of **high-variance** machine learning algorithms include: Decision Trees, k-Nearest Neighbors and Support Vector Machines.
+
+
+
+## Mathematics behind this tradeoff
+
+1. instrument measurement/classification-detection : Y = F(X) + e, where e: noise in measurement, default error that the instrument will have regardless
+   1. its usually assumed that the measurement from an instrument is perfect, i.e. e = 0, the ideal scenario
+   2. its assumed that this error e is *normally distributed with mean = 0* .
+   3. this means that the training data may carry noise along with it, and the amount of noise depends on this error value *e*.
+2. machine learning model has to learn this function. Let its function be ![equation](https://latex.codecogs.com/gif.latex?%5Chat%7Bf%7D%28X%29)
+3. expected error value Err(X) = ![equation](https://latex.codecogs.com/gif.latex?E%5B%28Y-%5Chat%7Bf%7D%28X%29%29%5E2%5D)  = ![equation](https://latex.codecogs.com/gif.latex?E%5B%28F%28x%29&plus;e-%5Chat%7Bf%7D%28X%29%29%5E2%5D)
+   1. ![equation](https://latex.codecogs.com/gif.latex?%5Cbegin%7Balign%7D%20%26%20%5Cfrac%7B1%7D%7BN%7D%5Csum%5Climits_i%5EN%20%5Cleft%28F%28x%29-%5Chat%7Bf%7D%28X%29%5Cright%29%5E2%20&plus;%20e%5E2%20&plus;%202e%28F%28x%29-%5Chat%7Bf%7D%28X%29%29%5C%5C%20%26%20E%5BF%28x%29-%5Chat%7Bf%7D%28X%29%5D%5E2%20&plus;%20%5Csigma_e%5E2%20&plus;%20%5Ctextrm%7Bvar%7D%20%5Cend%7Balign%7D) 
+4. hence total squared error = Bias^2 + Variance + irreducible error
+5. <img src="images/bulls-eye-bias-variance.png" />
+   * bull's eye diagram of displaying bias and variance
+   * the bull's eye, i.e. the circle at the centre represents the truth value, or the true output, and the crosses represent the values predicted by the model
+   * low-bias + low-variance is the best possible model to hope for
+   * if the model learns the training data too much, then it learns the pattern in the data and the noise as well, thus leading to low bias but high variance, called overfitting.
+   * high variance and high bias simply represents an under-trained model.
+6. <img src="images/balance.png" />
+   * models that are simple, involve less parameters are usually prone to under-fitting
+   * models that are relatively complex, involve lots of parameters, are usually prone to over-fitting.
+7. 
+8. <img src="images/bias-variance.png" />
+   as the above graph suggests, bias decreases with the complexity of the algorithm, but the variance increases, hence we need to find a ***sweet spot***, where both bias and variance are tolerably low.
+9. 
+
