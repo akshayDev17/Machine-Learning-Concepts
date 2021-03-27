@@ -33,8 +33,9 @@
 ### model-agnostic approach<a name="maa"></a>
 
 * When studying a machine learning problem, the underlying  structure in the data may or may not be described by one type of model  or the other.
-* The model-agnostic approach consists in using machine learning models to study the underlying structure without assuming that  it can be accurately described by the model because of its nature. 
-  * basically the entire interrelation between features that affect the dependent variable(s) cannot be explained by the model since the model is assumed to be inaccurate and inadequate under this approach.
+* The model-agnostic approach consists in using machine learning models to study the underlying structure without assuming that  it can be accurately described by **that particular** model because of its nature. 
+  * basically the entire interrelation between features that affect the dependent variable(s) cannot be explained by **that particular** model since the model is assumed to be inaccurate and inadequate under this approach.
+* in simpler terms, model-agnostic approach means model-independent approach of evaluating the data to predict the outcome.
 * This  avoids introducing a potential bias in the interpretation. 
 * A model-agnostic approach pretty much requires that several different techniques are used for the same task, the task being to explore the relationship between all  the features amongst themselves, and with the dependent variable(s).
 
@@ -100,6 +101,18 @@ Predict, based on the details of a client, whether the client will **churn out**
 
 
 
+AS FOR THE EXPLANATIONS OF A MODEL, READ THE HUMAN FRIENDLY EXPLANATIONS SUB-CHAPTER OF THE INTERPRETABILITY CHAPTER of this book, AND TRY TO ALIGN FUTURE PRESENTATIONS REGARDING EXPLAINING MODEL INTERPRETABILITY BASED ON THESE GUIDELINES.
+
+1. contrastive explainations
+2. selected explanations
+3. social
+4. focus on abnormal
+5. truthful
+6. coherent with the prior beliefs of the explainee(person to whom the model is being explained to)
+7. general and probable.
+
+
+
 ## Workings of LIME<a name="lime_works"></a>
 
 * fit a local, simple and interpretable model around the instance to be explained.
@@ -107,8 +120,3 @@ Predict, based on the details of a client, whether the client will **churn out**
     * `training_data`, `feature_names` gives the names of the independent features, `mode = classification`  tells the `explainer` that the task to be performed.
   * 
 * 
-
-
-
-
-
