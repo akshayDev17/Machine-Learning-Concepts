@@ -1,8 +1,18 @@
 # Table of Contents
 
+1. [Introduction](#introduction)
+   1. [Inference](#inference)
+2. [Non-parametric methods of estimating f](#non_param_methods)
+3. [Restrictive vs flexible methods](#restrictive_vs_flexible)
+4. [Qualitative vs Quantitative prediction](#prediction)
+   1. [Mean-squared error(MSE)](#mse)
+   2. [The bias-variance tradeoff](#bias-variance-tradeoff)
+5. [Bayes classifier](#bayes-classifier)
+6. [K-nearest neighbours](#knc)
 
 
-# Introduction
+
+# Introduction<a name="introduction"></a>
 
 - generic form of estimating a measured variable Y using a bunch of other measurable quantities, X, takes the following form: ![equation](https://latex.codecogs.com/gif.latex?Y%20%3D%20f%28X%29%20&plus;%20%5Cin%20%2C%5Ctextrm%7B%20such%20that%20%7DX%20%3D%20%5C%7BX_1%2C%20X_2....X_p%5C%7D) (y = f of X + epsilon, such that X = set of X1, X2, till X.p.)
   - here epsilon is assumed to be independent of X, normally distributed, with mean = 0, called the <u>irreducible error</u>.
@@ -26,14 +36,14 @@
 
 
 
-## Inference
+## Inference<a name="inference"></a>
 
 - while using machine learning for inference, instead of simply predicting Y given X, we want to understand the relationship between X and Y , or more specifically, to understand how Y changes as a function of X1, . . . , X.p. 
 - Now f-hat cannot be treated as a black box, because we need to know its exact form. 
 
 
 
-# Non-parametric methods of estimating f
+# Non-parametric methods of estimating f<a name="non_param_methods">
 
 - just to be brief, **parametric methods** are the usual ML models such as linear regressor, decision tree regressor, neural networks etc, that have **certain control parameters** through which their performance can be tuned. This is because some sort of an assumption is always made when it comes to the functional form of f, when these methods are used.
 - as for non-parametric methods, they do not make explicit assumptions about the functional form of f.
@@ -45,7 +55,7 @@
 
 
 
-## Restrictive vs flexible approach
+# Restrictive vs flexible approach<a name="restrictive_vs_flexible"></a>
 
 - restrictive and flexible implies a smaller and a larger range of shapes produced as a result of estimating f-hat respectively.
 - <img src="derivation_images/restrictive-vs-flexible.png" height="300"/>
@@ -145,4 +155,4 @@
 - high prediction cost - worse for large datasets
 - not good with high-dimensional data.
 - categorical features won't work well.
-- use case - classified data to be analysed, i.e. nothing known about what each column represents
+- use case - classifies data to be analysed, i.e. nothing known about what each column represents
