@@ -9,6 +9,10 @@
    2. [The bias-variance tradeoff](#bias-variance-tradeoff)
 5. [Bayes classifier](#bayes-classifier)
 6. [K-nearest neighbours](#knc)
+7. Additional Material
+   1. [Expectation identities](#ei)
+   2. [Variance identities](#vi)
+   3. [Covariance identities](#ci)
 
 
 
@@ -156,3 +160,61 @@
 - not good with high-dimensional data.
 - categorical features won't work well.
 - use case - classifies data to be analysed, i.e. nothing known about what each column represents
+
+
+
+# Additional Material<a name="additional-material"></a>
+
+- not part of the chapter-2, but still important.
+
+
+
+## Expectation identities<a name="ei"></a>
+
+- random variable multiplied by a constant
+  - expectation is that constant times the expectation of the original random variable.
+    E of k-X = 
+  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/expectation-constant.png" />
+- sum of 2 random variables
+  - the definition of X + Y states that any possible value of X can be added with any possible value of Y, hence the range of all possible values of X+Y is the double summation, the first over all values of X and the second over that of Y.
+  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/expectation-of-sum-of-rv.png" />
+  - here, P-sub-XY-of-x-y is called the joint probability distribution of x and y, and its summation over either x or y is the marginal distribution of y and x respectively.
+    - marginalization can be explained with the following example.
+    - Suppose we’re interested in how the *weather affects someone’s happiness* in the **United Kingdom (UK)**. 
+    - We can write this mathematically as P of (happiness | given weather) i.e. what’s the probability of someone’s happiness level given the type of weather.
+
+    - Suppose we had the equipment and definition required to measure someone’s happiness and also recorded the weather for someone in England and another in Scotland. 
+
+    - Now it’s feasible that people in Scotland are just generally happier than people in England. 
+
+    - The problem is that people always have a nationality so I can’t just get rid of it in the measurement. 
+
+    - So what we’re actually measuring is P(happiness and country given weather), i.e. we’re looking at the happiness and the country at the same time.
+
+    - Marginalisation tells us that we can calculate the quantity we want if we sum over all possibilities of countries (remember that the UK is made up of 3 countries: England, Scotland and Wales) i.e. P(happiness given weather) = P(happiness and country=England given weather) + P(happiness and country=Scotland given weather) + P(happiness and country=Wales given weather).
+
+
+
+
+
+
+## Variance identities<a name="vi"></a>
+
+- variance as a difference of expectation of squared random variable and square of expectation of the random variable
+  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/var-diff-of-expect.png" />
+- variance of a constant times a random variable.
+  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/var-constant-times-X.png" />
+- variance of a sum of two random variables.
+  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/var-sum-X-Y.png" />
+  - 
+- variance of n random variables
+  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/variance-of-n-rv.png" />
+
+
+
+## Covariance Identities<a name="ci"></a>
+
+- covariance as the difference of the expectation of product of the random variables and the product of expectations of the random variables
+  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/covariance-exp1.png" />
+- sum of 2 variables, each multiplied by some difference constant
+  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/cov-ax-by.png" />
