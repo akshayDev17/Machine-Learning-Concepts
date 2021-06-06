@@ -36,6 +36,7 @@
       - so the term reduces to 2 times expectation of b times epsilon .
       - covariance of b and epsilon = expectation of b times epsilon minus  expectation of b times expectation of epsilon.
         the covariance term is 0, thus expectation of b times epsilon =  expectation of b times expectation of epsilon, and expectation of epsilon, i.e. the mean of epsilon, is 0, hence expectation of b times epsilon = 0.
+    - ![equation](https://latex.codecogs.com/gif.latex?%5Cbegin%7Balign*%7D%20E%20%5Cleft%5B%28Y%20-%20%5Chat%7BY%7D%29%5E2%20%5Cright%5D%20%26%3D%20E%20%5Cleft%5B%28f%28X%29%20&plus;%20%5Cepsilon%20-%20%5Chat%7Bf%7D%28X%29%29%5E2%20%5Cright%5D%20%3D%20E%5Cleft%5B%20%5Cleft%28f%28X%29-%5Chat%7Bf%7D%28X%29%20%5Cright%20%29%5E2%20&plus;%20%5Cepsilon%5E2%20-2%5Cepsilon%5Cleft%28f%28X%29-%5Chat%7Bf%7D%28X%29%20%5Cright%20%29%20%5Cright%20%5D%20%5C%5C%20%26%3D%20E%5Cleft%5B%5Cleft%28f%28X%29-%5Chat%7Bf%7D%28X%29%20%5Cright%20%29%5E2%20%5Cright%5D%20&plus;%20E%5B%5Cepsilon%5E2%5D%20-2%20E%5Cleft%5B%20%5Cepsilon%5Cleft%28f%28X%29-%5Chat%7Bf%7D%28X%29%20%5Cright%20%29%20%5Cright%20%5D%20%5C%5C%20%26%3D%20%5Cleft%28f%28X%29-%5Chat%7Bf%7D%28X%29%20%5Cright%20%29%5E2%20&plus;%20Var.%28%5Cepsilon%29%20-%20E%5E2%5Cleft%5B%5Cepsilon%20%5Cright%20%5D%20-2%5Cleft%28f%28X%29-%5Chat%7Bf%7D%28X%29%20%5Cright%20%29E%5B%5Cepsilon%5D%20%5C%5C%20%26%3D%20%5Cleft%28f%28X%29-%5Chat%7Bf%7D%28X%29%20%5Cright%20%29%5E2%20&plus;%20Var.%28%5Cepsilon%29%20%5C%5C%20%5Cend%7Balign*%7D) , f(X) and f-hat(X) are both deterministic functions, hence their expectation value is their own value. 
   - only on the knowledge of Y and the function f of X can the irreducible error be quantified, and its distribution be looked at, generally only Y will ever be given.
 
 
@@ -174,10 +175,10 @@
 - random variable multiplied by a constant
   - expectation is that constant times the expectation of the original random variable.
     E of k-X = 
-  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/expectation-constant.png" />
+  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-2/derivation_images/mean-constant.png" />
 - sum of 2 random variables
   - the definition of X + Y states that any possible value of X can be added with any possible value of Y, hence the range of all possible values of X+Y is the double summation, the first over all values of X and the second over that of Y.
-  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/expectation-of-sum-of-rv.png" />
+  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-2/derivation_images/expectation-of-sum-of-rv.png" />
   - here, P-sub-XY-of-x-y is called the joint probability distribution of x and y, and its summation over either x or y is the marginal distribution of y and x respectively.
     - marginalization can be explained with the following example.
     - Suppose we’re interested in how the *weather affects someone’s happiness* in the **United Kingdom (UK)**. 
@@ -201,20 +202,20 @@
 ## Variance identities<a name="vi"></a>
 
 - variance as a difference of expectation of squared random variable and square of expectation of the random variable
-  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/var-diff-of-expect.png" />
+  - <img src="./derivation_images/var-diff-of-expect.png" />
 - variance of a constant times a random variable.
-  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/var-constant-times-X.png" />
+  - <img src="./derivation_images/var-constant-times-X.png" />
 - variance of a sum of two random variables.
-  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/var-sum-X-Y.png" />
+  - <img src="./derivation_images/var-sum-X-Y.png" />
   - 
 - variance of n random variables
-  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/variance-of-n-rv.png" />
+  - <img src="./derivation_images/variance-of-n-rv.png" />
 
 
 
 ## Covariance Identities<a name="ci"></a>
 
 - covariance as the difference of the expectation of product of the random variables and the product of expectations of the random variables
-  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/covariance-exp1.png" />
+  - <img src="./derivation_images/covariance-exp1.png" />
 - sum of 2 variables, each multiplied by some difference constant
-  - <img src="/home/laferrari/github/Machine-Learning-Concepts/src/islr_notes/chapter-3-linear-regression/cov-ax-by.png" />
+  - <img src="./derivation_images/cov-ax-by.png" />
