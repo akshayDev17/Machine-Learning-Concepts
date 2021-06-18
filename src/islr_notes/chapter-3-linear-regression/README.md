@@ -25,6 +25,7 @@
 14. [Multiple Linear Regression](#mlr)
     1. [F-statistic](#f)
        1. [Degrees of Freedom in Statistics](#dof)
+    2. [Other Assessments of the model](#other-assess)
 
 
 
