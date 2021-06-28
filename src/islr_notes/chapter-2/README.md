@@ -13,6 +13,7 @@
    1. [Expectation identities](#ei)
    2. [Variance identities](#vi)
    3. [Covariance identities](#ci)
+8. [Questionnaire](#questions)
 
 
 
@@ -146,7 +147,7 @@
 # K-nearest neighbours<a name="knc"></a>
 
 -  identifies the K points in the training data that are closest to x-nought, represented by N-nought.
-- the conditional probability for class j is estimated as the fraction of points in N-nought whose response values equal j: ![equation](https://latex.codecogs.com/gif.latex?%5Cdpi%7B150%7D%20P%28Y%20%3D%20j%20%7C%20X%20%3D%20x_0%29%20%3D%20%5Cfrac%7B1%7D%7BK%7D%5Csum%5Climits_%7Bi%20%5Cin%20N_0%7D%20I%28y_i%20%3D%20j%29)
+- the conditional probability for class j is estimated as the fraction of points in N-nought whose response values equal j: ![equation](https://latex.codecogs.com/gif.latex?%5Cdpi%7B150%7D%20P%28Y%20%3D%20j%20%7C%20X%20%3D%20x_0%29%20%3D%20%5Cfrac%7B1%7D%7BK%7D%5Csum%5Climits_%7Bi%20%5Cin%20N_0%7D%20I%28y_i%20%3D%20j%29), K = number of clusters thus formed, using a certain cutoff for Euclidean distance, to cluster the points in the first place.
 - as can be observed here, there is no loss function, it just gives the conditional probability distribution.
 - for an increasing K
     - tendency to mislabel the points increases, but a clear, more linear, decision boundary is obtained.
@@ -219,3 +220,15 @@
   - <img src="./derivation_images/covariance-exp1.png" />
 - sum of 2 variables, each multiplied by some difference constant
   - <img src="./derivation_images/cov-ax-by.png" />
+- covariance of a constant/deterministic variable and a random variable
+  - ![This is the rendered form of the equation. You can not edit this directly. Right click will give you the option to save the image, and in most browsers you can drag the image onto your desktop or another program.](https://latex.codecogs.com/gif.latex?cov%28a%2CX%29%20%3D%20E%5BaX%5D%20-%20E%5Ba%5D.E%5BX%5D%20%3D%20aE%5BX%5D%20-%20aE%5BX%5D%20%3D%200)
+- covariance of x+y, z.
+  - ![This is the rendered form of the equation. You can not edit this directly. Right click will give you the option to save the image, and in most browsers you can drag the image onto your desktop or another program.](https://latex.codecogs.com/gif.latex?cov%28X&plus;Y%2CZ%29%20%3D%20E%5B%28X&plus;Y%29Z%5D%20-%20E%5BX&plus;Y%5D.E%5BZ%5D%20%3D%20E%5BXZ&plus;YZ%5D%20-%20%28E%5BX%5D&plus;E%5BY%5D%29E%5BZ%5D%20%3D%20E%5BXZ%5D&plus;E%5BYZ%5D-E%5BX%5D%5BZ%5D-E%5BY%5D%5BZ%5D%20%3D%20%5Cleft%28E%5BXZ%5D%20-E%5BX%5D%5BZ%5D%20%5Cright%20%29%20&plus;%20%5Cleft%28E%5BYZ%5D%20-E%5BY%5D%5BZ%5D%20%5Cright%20%29%20%3D%20cov%28X%2CZ%29&plus;%20cov%28Y%2CZ%29%20%5C%5C%20%5C%5C%20%5Ctherefore%20%5C%2C%2C%5C%2C%20cov%28X&plus;Y%2CZ%29%20%3D%20cov%28X%2CZ%29&plus;%20cov%28Y%2CZ%29)
+
+
+
+
+
+# Questionnaire<a name="questions"></a>
+
+<img src="questionnaire.png" />
