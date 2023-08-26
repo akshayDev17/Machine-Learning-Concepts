@@ -8,3 +8,4 @@ src/interpret-ml-models/*.pdf
 *.ipynb_checkpoints
 src/interpret-ml-models/christophM_datasets
 src/islr_notes/ISLR\ Seventh\ Printing.pdf
+*workspace*
