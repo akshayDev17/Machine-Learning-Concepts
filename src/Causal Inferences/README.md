@@ -52,6 +52,8 @@
 - in addition to this, counterfactuals estimation will also be required.
 - Once both exists, **Average Treatment Effect(ATE)** is the *arithmetic mean* of *Individual Treatment Effect*.
     - which is the difference in treatment outcome and control outcome.
+    - $ATE = \mathcal{E}\left[Y_i(1)\right] - \mathcal{E}\left[Y_i(0)\right]$
+    - $Y_i(1)$ means for people who received treatment, what was the outcome(1: cured, 0: not-cured).
 - **CATE(Conditional ATE)**: based on condition(s) imposed on confounder(s), whats ATE?
     - <img src="cate.png" width=400 />
 
@@ -61,6 +63,8 @@
 - ITE = $P(Y_i=1|W_i=1) - P(Y_i=1|W_i=0)$
     - a person having $W_i = 0$ can't have another entry in the $W_i=1$ since either an ad/email was recommended/sent or not.
     - hence for people with $W_i=0$ the first term needs to be estimated, and for people with $W_i=1$ the second one.
+    - also notice why $Y_i=1$ in both terms. That's because we only look at persuadables/people who do make a purchase.
+        - not interested in those who don't/didn't.
     
 
 ## Meta-Learning Techniques
@@ -97,13 +101,41 @@
 ## Causal Decision Trees
 - [Codemporium YT video](https://www.youtube.com/watch?v=IEj8uzIG7C8)
 
+# Propensity Score
+
+## Reason
+- availability of treatment(in observation data) depends on confounders(X), and is never truly random($P(W)=0.5$)
+- hence a distribution $P(W|X)$ exists.
+- to *rectify* this *bias*, propensity score is introduced.
+- $e(W_i) = P(W_i=1|X_i)$, i.e. probability of getting the treatment(or being recommended an ad) w.r.t. its confounders.
+- the expression for ATE = E\[ITE\] = $E[P(Y_i=1|W_i=1)] - E[P(Y_i=1|W_i=0)]$.
+- on using propensity, $ATE = E\left[\frac{W_iY_i}{e(X_i)}\right] - E\left[\frac{(1-W_i)Y_i}{(1-e(X_i))}\right]$
+    - uncured samples, i.e. $Y_i=0$ won't contribute to any terms.
+    - untreated but cured won't contribute to the first term.
+    - hence $ATE = E\left[\frac{Y_i}{e(X_i)}\right] - E\left[\frac{Y_i}{(1-e(X_i))}\right] = E\left[\frac{Y_i}{P(W_i=1|X_i)}\right] - E\left[\frac{Y_i}{(P(W_i=0|X_i))}\right]$
+    - remember that for any random variable $x \rightarrow p(x), E[f(x)] = \int xf(x)dx$
+    - for the new and old forms of expected values, the probability distribution of X is different.
+        - in the first expression, its not conditional.
+        - for the $2^{nd}$ expression, its actually $x|W_i=1$, and $x|W_i=0$
+    - $E\left[\frac{Y_i}{P(W_i=1|X_i)}\right] = \int \frac{Y_i}{P(W_i=1|X_i)} P(X|W_i=1) dX$
+        - using Bayes Theorem: $P(A|B).P(B)=P(B|A).P(A) \Rightarrow $
+
 # Watchlist
+- [Regression and Matching | Causal Inference in Data Science Part 1](https://www.youtube.com/watch?v=gUMhBkof7Ck)
 - [Stanford Lectures on ATE](https://www.youtube.com/watch?v=ZA8iOjUR8aY&list=PLxq_lXOUlvQAoWZEqhRqHNezS30lI49G-&index=5)
+
+# Papers
+- [Robust Causal Inference for Incremental Return on Ad Spend with Randomized Paired Geo Experiments](https://research.google/pubs/robust-causal-inference-for-incremental-return-on-ad-spend-with-randomized-paired-geo-experiments/)
+- 
+
+# Practicals
+- [Water Quality Causal Inference by LiNGAM](https://www.kaggle.com/code/sasakitetsuya/water-quality-causal-inference-by-lingam)
 
 ## Direct Uplift Estimation Techniques
 
 # <font color="red">Resources Pending</font>
 - https://blog.ml.cmu.edu/2020/08/31/7-causality/
 - [Brad Neal - Causal Inference](https://www.youtube.com/@BradyNealCausalInference)
+- [Causal inference as a blind spot of data scientists](https://dzidas.com/ml/2023/10/15/blind-spot-ds/)
 - [Strong ignorability: confusion on the relationship between outcomes and treatment](https://stats.stackexchange.com/questions/474616/strong-ignorability-confusion-on-the-relationship-between-outcomes-and-treatmen)
 - 
