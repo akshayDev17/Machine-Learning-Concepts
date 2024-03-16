@@ -123,6 +123,7 @@
 # Watchlist
 - [Regression and Matching | Causal Inference in Data Science Part 1](https://www.youtube.com/watch?v=gUMhBkof7Ck)
 - [Stanford Lectures on ATE](https://www.youtube.com/watch?v=ZA8iOjUR8aY&list=PLxq_lXOUlvQAoWZEqhRqHNezS30lI49G-&index=5)
+- [Using LLMs for causal inference](https://www.youtube.com/watch?v=1D5P7RVhHFU)
 
 # Papers
 - [Robust Causal Inference for Incremental Return on Ad Spend with Randomized Paired Geo Experiments](https://research.google/pubs/robust-causal-inference-for-incremental-return-on-ad-spend-with-randomized-paired-geo-experiments/)
