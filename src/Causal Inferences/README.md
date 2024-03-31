@@ -1,4 +1,20 @@
-# Randomized Control Tests
+# Table of Contents
+1. [RCT](#rct)
+    1. [Challenges](#rct-challenges)
+        1. [Confounders](#confounders)
+        2. [Selection Bias](#selection-bias)
+        3. [Counterfactuals](#counterfactuals)
+    2. [Assumptions](#assumptions)
+2. []
+6. Impact of Covariate shift on Uplift modelling
+    1. [Introduction](#covariate-shift-impact)
+    2. 
+7. [Watchlist](#watchlist)
+8. [Papers](#papers)
+9. [Practicals](#practicals)
+10. [Pending Resources](#pending_resources)
+
+# Randomized Control Tests<a name="rct"></a>
 - Problem statement: send targetted ads/emails to people inorder to increase purchases.
 - 2 groups:
     - Treatment group: receives emails.
@@ -14,22 +30,22 @@
         - for instance, assume that data for food-delivery ad-recommendations exists.
         - the same customer basis cannot be used for a diamond-ad-recommendation because most of the samples would have a different label value.
 
-## Challenges
+## Challenges<a name="rct-challenges"></a>
 
-### Confounders
+## Confounders<a name="confounders"></a>
 1. Features that influence:
     1. efficacy of treatment.
     2. availability of treatment(whether the features impact a person's ability to avail the treatment).
 
-## Selection Bias
+## Selection Bias<a name="selection-bias"></a>
 1. Sample selected doesn't represent population.
 2. for instance, sample = aged 20-30, population: avg age 45.
 
-### Counterfactuals.
+## Counterfactuals<a name="counterfactuals"></a>
 1. What would've happened if a person who was given the treatment not be given the treatment instead? Would they've naturally cured?
 2. Similarly, would a person who wasn't given the treatment be given it and be cured? or be uncured?
 
-## Assumptions
+## Assumptions<a name="assumptions"></a>
 
 ### Causal Markov Condition
 - <font color="red" size=4>What's this?</font>
@@ -80,8 +96,60 @@
     - the reverse could be true, meaning lower/negative ITEs than reality.
     - Hence the need to combine all samples into a single model.
     - ***Class Transformation Approach*** is hence used.
+- See these noteboooks to know about the 3 main kinds of uplift learners: S, T, X.
+- a meta-learner is a combination of such learner(s).
+- **THE MAIN TASK** of **META LEARNER** is to **ESTIMATE INDIVIDUAL TREATMENT EFFECT**, not correctly predict potential outcome as much.
+- Stacking, blending, or weighted averaging of individual treatment effect models.
 
-### Class Transformation Approach
+## Causal Decision Trees
+- [Codemporium YT video](https://www.youtube.com/watch?v=IEj8uzIG7C8)
+
+# Propensity Score
+
+## Reason
+- availability of treatment(in observation data) depends on confounders(X), and is never truly random($P(W)=0.5$)
+- hence a distribution $P(W|X)$ exists.
+- to *rectify* this *bias*, propensity score is introduced.
+- $e(W_i) = P(W_i=1|X_i)$, i.e. probability of getting the treatment(or being recommended an ad) w.r.t. its confounders.
+- the expression for ATE = E\[ITE\] = $E[P(Y_i=1|W_i=1)] - E[P(Y_i=1|W_i=0)]$.
+- on using propensity, $ATE = E\left[\frac{W_iY_i}{e(W_i)}\right] - E\left[\frac{(1-W_i)Y_i}{(1-e(W_i))}\right]$
+    - uncured samples, i.e. $Y_i=0$ won't contribute to any terms.
+    - untreated but cured won't contribute to the first term. Hence, **only treated units** would contribute to **first term**.
+    - hence $ATE = E\left[\frac{Y_i}{e(X_i)}\right] - E\left[\frac{Y_i}{(1-e(X_i))}\right] = E\left[\frac{Y_i}{P(W_i=1|X_i)}\right] - E\left[\frac{Y_i}{(P(W_i=0|X_i))}\right] = \frac{1}{n}\sum\limits_{i, t_i=1} \frac{y_i}{p(t_i=1|x_i)} - \frac{1}{n}\sum\limits_{i, t_i=0} \frac{y_i}{p(t_i=0|x_i)}$, n: total units or samples, not necessary that all samples contribute in a non-zero way, but doesn't mean they won't be taken while calculating average.
+    - $\frac{1}{n}\sum\limits_{i, t_i=1} \frac{y_i}{p(t_i=1|x_i)} = \frac{1}{n_1}\sum\limits_{i, t_i=1} \dfrac{p(t_i=1).p(y_i)}{p(t_i=1|x_i)} = $
+        - now this expression adheres to the confounder-led bias in treatment, 
+    - remember that for any random variable $x \rightarrow p(x), E[f(x)] = \int xf(x)dx$
+    - for the new and old forms of expected values, the probability distribution of X is different.
+        - in the first expression, its not conditional.
+        - for the $2^{nd}$ expression, its actually $x|W_i=1$, and $x|W_i=0$
+    - $E\left[\frac{Y_i.P(W_i=1)}{P(W_i=1|X_i)}\right] = \int \frac{Y_i.P(W_i=1)}{P(W_i=1|X_i)} P(X|W_i=1) dX$
+        - using Bayes Theorem: $P(A|B).P(B)=P(B|A).P(A) \Rightarrow P(A)=\frac{P(A|B).P(B)}{P(B|A)}, B=(W_i=1), A=X$
+        - $\int Y_i P(X) dX = E[Y_i]$
+
+# Direct Uplift Estimation Techniques
+## Uplift Classification
+1. Correctly predict potential outcome(probability).
+2. This probability is of an individual responding positively to a treatment.
+3. Trained directly to classify individuals as "responders" or "non-responders" based on their expected treatment response.
+
+## Estimating ITE vs Uplift Classification
+1. the following is a snippet from a chat with GPT3.5
+2. if theres a positive and a negative response, why/when there wouldn't be the strength of that response? for example, in the promotional offers(treatment) example, if promotional offers did result in a purchase(positive response), then shouldn't we be rather looking as individual treatment effect estimation? in other words, look at the amount of purchase made on being notified of a promotional offer(treated)?
+3. ChatGPT
+    You raise an important point. In some scenarios, particularly those involving promotional offers or marketing campaigns, the focus may indeed be on estimating the individual treatment effect or the strength of the response to the treatment, rather than just predicting whether a response occurs or not. Let's delve deeper into this distinction:
+
+    1. Binary Response vs. Continuous Response:
+    In many uplift modeling applications, such as direct marketing campaigns, the response variable may indeed be binary, representing whether an individual responded positively (e.g., made a purchase) or not to the treatment (e.g., receiving a promotional offer).
+    However, in other cases, particularly when the outcome of interest is quantitative or continuous (e.g., amount spent on purchases), the focus shifts to estimating the strength or magnitude of the response to the treatment.
+    2. Individual Treatment Effect Estimation:
+    When the outcome of interest is continuous or quantitative, estimating the individual treatment effect becomes crucial. This involves quantifying the difference in outcomes between treated and untreated individuals, such as the difference in purchase amounts between those who received a promotional offer and those who did not.
+    Techniques such as S-learner, T-learner, or X-learner are commonly used for individual treatment effect estimation in these scenarios. These methods provide insights into how much each individual's outcome changes as a result of receiving the treatment.
+    3. Optimizing Treatment Allocation:
+    Estimating individual treatment effects allows for more informed decision-making in resource allocation and treatment targeting. By understanding the magnitude of the response to the treatment for each individual, organizations can optimize their strategies to target individuals who are likely to generate the highest return on investment (e.g., highest purchase amounts in response to promotional offers).
+
+In summary, while binary response prediction models (such as classifiers) focus on predicting whether a response occurs or not, individual treatment effect estimation techniques provide a deeper understanding of the strength and magnitude of the response to the treatment, particularly in scenarios where the outcome of interest is continuous or quantitative, such as purchase amounts or revenue generated. This information enables organizations to make more targeted and effective decisions in treatment allocation and intervention strategies.
+
+## Class Transformation Approach
 - Define a new target variable $Z_i$ by combining $W_i, Y_i$
     - $Z_i = W_iY_i + (1-W_i)(1-Y_i)$
     - $\therefore \,, Z_i = \begin{cases} 1 & \textrm{both are 0 or 1} \\ 0 & \textrm{either is 0, but the other is 1} \end{cases}$
@@ -98,43 +166,39 @@
         - either people in the treatment group will be cured($P(Y_i=1)$) or not cured($P(Y_i=0)$).
     - ITE = $2\left[P(Z_i=1) + 0.5 -1 \right] = 2\left[P(Z_i=1) -0.5 \right] = 2P(Z_i=1) -1$
 
-## Causal Decision Trees
-- [Codemporium YT video](https://www.youtube.com/watch?v=IEj8uzIG7C8)
+# Causal inference is same as Uplift modelling?
+- Causal inference focuses on understanding the *causal relationship between variables*, particularly in observational studies where experiments are not feasible or ethical. 
+    - It aims to determine the effect of a treatment or intervention on an outcome by accounting for potential confounding variables.
+- Uplift modeling, on the other hand, is a technique used in marketing and personalized interventions to *predict* the *incremental impact of a treatment* or action *on an individual*'s behavior. 
+    - It aims to identify the subset of individuals who will respond positively to a treatment, such as a marketing campaign, and those who will not, enabling targeted interventions.
 
-# Propensity Score
+While both causal inference and uplift modeling deal with understanding the effects of interventions, they approach the problem from different perspectives and have distinct methodologies and objectives.
 
-## Reason
-- availability of treatment(in observation data) depends on confounders(X), and is never truly random($P(W)=0.5$)
-- hence a distribution $P(W|X)$ exists.
-- to *rectify* this *bias*, propensity score is introduced.
-- $e(W_i) = P(W_i=1|X_i)$, i.e. probability of getting the treatment(or being recommended an ad) w.r.t. its confounders.
-- the expression for ATE = E\[ITE\] = $E[P(Y_i=1|W_i=1)] - E[P(Y_i=1|W_i=0)]$.
-- on using propensity, $ATE = E\left[\frac{W_iY_i}{e(X_i)}\right] - E\left[\frac{(1-W_i)Y_i}{(1-e(X_i))}\right]$
-    - uncured samples, i.e. $Y_i=0$ won't contribute to any terms.
-    - untreated but cured won't contribute to the first term.
-    - hence $ATE = E\left[\frac{Y_i}{e(X_i)}\right] - E\left[\frac{Y_i}{(1-e(X_i))}\right] = E\left[\frac{Y_i}{P(W_i=1|X_i)}\right] - E\left[\frac{Y_i}{(P(W_i=0|X_i))}\right]$
-    - remember that for any random variable $x \rightarrow p(x), E[f(x)] = \int xf(x)dx$
-    - for the new and old forms of expected values, the probability distribution of X is different.
-        - in the first expression, its not conditional.
-        - for the $2^{nd}$ expression, its actually $x|W_i=1$, and $x|W_i=0$
-    - $E\left[\frac{Y_i}{P(W_i=1|X_i)}\right] = \int \frac{Y_i}{P(W_i=1|X_i)} P(X|W_i=1) dX$
-        - using Bayes Theorem: $P(A|B).P(B)=P(B|A).P(A) \Rightarrow $
+# Impact of Covariate/Dataset shift<a name="covariate-shift-impact"></a>
+1. Suppose your original training set had 3600 samples, s.t. age was a feature ranging from 20-30.
+2. You test the corresponding uplift classifier out on a group of 100 samples whose age ranges in 35-50.
+    1. Firstly, should you even test on such a dataset, that has a large covariate shift(on age) from your original training set?
+    2. The answer is no, its not right. following are the reasons when the model considered is a decision tree classifier([`causalml.inference.tree.UpliftTreeClassifier`](https://github.com/uber/causalml/blob/v0.15.0/causalml/inference/tree/uplift.pyx#L333))
+    3. **Tree Structure Validity**
+        1. Since age ranges in 20-30 in training data, the age space will be partitioned into rectangular regions whose limits are in this range.
+        2. The tree may make splits at irrelevant age boundaries or miss important boundaries in the new range, when tested on the new sample-set having the 35-50 age range.
+    4. **Missed Interactions**
+        1. The trees may have missed learning important interactions between age and other features for the 35-50 range during training.
+        2. This can limit the model's representational capacity in the new feature space.
 
-# Watchlist
-- [Regression and Matching | Causal Inference in Data Science Part 1](https://www.youtube.com/watch?v=gUMhBkof7Ck)
-- [Stanford Lectures on ATE](https://www.youtube.com/watch?v=ZA8iOjUR8aY&list=PLxq_lXOUlvQAoWZEqhRqHNezS30lI49G-&index=5)
+# Watchlist<a name="watchlist"></a>
 - [Using LLMs for causal inference](https://www.youtube.com/watch?v=1D5P7RVhHFU)
 
-# Papers
+# Papers<a name="papers"></a>
 - [Robust Causal Inference for Incremental Return on Ad Spend with Randomized Paired Geo Experiments](https://research.google/pubs/robust-causal-inference-for-incremental-return-on-ad-spend-with-randomized-paired-geo-experiments/)
-- 
 
-# Practicals
+
+# Practicals<a name="practicals"></a>
 - [Water Quality Causal Inference by LiNGAM](https://www.kaggle.com/code/sasakitetsuya/water-quality-causal-inference-by-lingam)
 
-## Direct Uplift Estimation Techniques
 
-# <font color="red">Resources Pending</font>
+
+# <font color="red">Resources Pending</font><a name="pending_resources"></a>
 - https://blog.ml.cmu.edu/2020/08/31/7-causality/
 - [Brad Neal - Causal Inference](https://www.youtube.com/@BradyNealCausalInference)
 - [Causal inference as a blind spot of data scientists](https://dzidas.com/ml/2023/10/15/blind-spot-ds/)
