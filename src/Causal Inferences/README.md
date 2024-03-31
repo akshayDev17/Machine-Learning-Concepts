@@ -5,10 +5,25 @@
         2. [Selection Bias](#selection-bias)
         3. [Counterfactuals](#counterfactuals)
     2. [Assumptions](#assumptions)
-2. []
+        1. [Causal Markov Condition](#causal_markov_condition)
+        2. [Stable Unit Treatment Value Assumption](#sutva)
+        3. [Ignorability](#ignorability)
+    3. [Measuring Treatment Effects](#mte)
+2. Uplift Modelling
+    1. [Introduction](#uplift_modelling)
+    2. [Meta-Learning Techniques](#meta_learners)
+    3. [Causal Decision Trees](#cdt)
+3. Propensity Score
+    1. [Introduction](#propensity_score)
+    2. [Reason for Propensity](#reason_for_propensity)
+4. Direct Uplift Estimation Techniques
+    1. [Introduction](#duet)
+    2. [Uplift Classification](#uc)
+    3. [Estimating ITE vs Uplift Classification](#et_vs_uc)
+    4. [Class Transformation Approach](#cta)
+5. [Causal inference is same as Uplift modelling?](#ci_vs_um)
 6. Impact of Covariate shift on Uplift modelling
     1. [Introduction](#covariate-shift-impact)
-    2. 
 7. [Watchlist](#watchlist)
 8. [Papers](#papers)
 9. [Practicals](#practicals)
@@ -47,23 +62,23 @@
 
 ## Assumptions<a name="assumptions"></a>
 
-### Causal Markov Condition
+### Causal Markov Condition<a name="causal_markov_condition"></a>
 - <font color="red" size=4>What's this?</font>
 - Causal graphs
     - <img src="causal_graph.png" width=400 />
     - <img src="causal_graph_simplified.png" width=400 />
 
-### Stable Unit Treatment Value Assumption
+### Stable Unit Treatment Value Assumption<a name="sutvs"></a>
 - Assume a communicable disease.
 - what if the person receiving treatment is in contact with a person not receiving it? Can they not cure in this case, even on getting the treatment?
 - In the context of ad-recommendation, can the person being recommended the ad *pursuade* the one not being recommended for a purchase?
     - Likewise, can the person being recommended the ad *be dissuaded* by the one not being recommended from making a purchase?
 - <font color="red" size=4>Study more on this !!</font>
 
-### Ignorability
+### Ignorability<a name="ignorability"></a>
 - no additional confounders exist that could've affected the treatment/outcome.
 
-## Measuring Treatment Effects
+## Measuring Treatment Effects<a name="mte"></a>
 - Treatment Effects can stem from dependency on a lot of confounders.
 - in addition to this, counterfactuals estimation will also be required.
 - Once both exists, **Average Treatment Effect(ATE)** is the *arithmetic mean* of *Individual Treatment Effect*.
@@ -73,7 +88,7 @@
 - **CATE(Conditional ATE)**: based on condition(s) imposed on confounder(s), whats ATE?
     - <img src="cate.png" width=400 />
 
-# Uplift Modelling
+# Uplift Modelling<a name="uplift_modelling"></a>
 - in the targetted-ads task, the people that make a purchase on receiving an email/ad are called **persuadables**.
 - $Y$ = 0 or 1(made a purchase), $W$ = 0 or 1(was sent an ad/email), $X$: feature vector definining a person.
 - ITE = $P(Y_i=1|W_i=1) - P(Y_i=1|W_i=0)$
@@ -82,8 +97,7 @@
     - also notice why $Y_i=1$ in both terms. That's because we only look at persuadables/people who do make a purchase.
         - not interested in those who don't/didn't.
     
-
-## Meta-Learning Techniques
+## Meta-Learning Techniques<a name="meta_learners"></a>
 - ML to detect hidden patterns in people-data.
 - reiterating from above section, **2 models are required**: if an ad is sent, chances of purchase , if an ad is not sent, chances of purchase.
     - first model takes people with $W_i=1$, the other with $W_i=0$.
@@ -101,12 +115,12 @@
 - **THE MAIN TASK** of **META LEARNER** is to **ESTIMATE INDIVIDUAL TREATMENT EFFECT**, not correctly predict potential outcome as much.
 - Stacking, blending, or weighted averaging of individual treatment effect models.
 
-## Causal Decision Trees
+## Causal Decision Trees<a name="cdt"></a>
 - [Codemporium YT video](https://www.youtube.com/watch?v=IEj8uzIG7C8)
 
-# Propensity Score
+# Propensity Score<a name="propensity_score"></a>
 
-## Reason
+## Reason<a name="reason_for_propensity"></a>
 - availability of treatment(in observation data) depends on confounders(X), and is never truly random($P(W)=0.5$)
 - hence a distribution $P(W|X)$ exists.
 - to *rectify* this *bias*, propensity score is introduced.
@@ -126,13 +140,13 @@
         - using Bayes Theorem: $P(A|B).P(B)=P(B|A).P(A) \Rightarrow P(A)=\frac{P(A|B).P(B)}{P(B|A)}, B=(W_i=1), A=X$
         - $\int Y_i P(X) dX = E[Y_i]$
 
-# Direct Uplift Estimation Techniques
-## Uplift Classification
+# Direct Uplift Estimation Techniques<a name="duet"></a>
+## Uplift Classification<a name="uc"></a>
 1. Correctly predict potential outcome(probability).
 2. This probability is of an individual responding positively to a treatment.
 3. Trained directly to classify individuals as "responders" or "non-responders" based on their expected treatment response.
 
-## Estimating ITE vs Uplift Classification
+## Estimating ITE vs Uplift Classification<a name="et_vs_uc"></a>
 1. the following is a snippet from a chat with GPT3.5
 2. if theres a positive and a negative response, why/when there wouldn't be the strength of that response? for example, in the promotional offers(treatment) example, if promotional offers did result in a purchase(positive response), then shouldn't we be rather looking as individual treatment effect estimation? in other words, look at the amount of purchase made on being notified of a promotional offer(treated)?
 3. ChatGPT
@@ -149,7 +163,7 @@
 
 In summary, while binary response prediction models (such as classifiers) focus on predicting whether a response occurs or not, individual treatment effect estimation techniques provide a deeper understanding of the strength and magnitude of the response to the treatment, particularly in scenarios where the outcome of interest is continuous or quantitative, such as purchase amounts or revenue generated. This information enables organizations to make more targeted and effective decisions in treatment allocation and intervention strategies.
 
-## Class Transformation Approach
+## Class Transformation Approach<a name="cta"></a>
 - Define a new target variable $Z_i$ by combining $W_i, Y_i$
     - $Z_i = W_iY_i + (1-W_i)(1-Y_i)$
     - $\therefore \,, Z_i = \begin{cases} 1 & \textrm{both are 0 or 1} \\ 0 & \textrm{either is 0, but the other is 1} \end{cases}$
@@ -166,7 +180,7 @@ In summary, while binary response prediction models (such as classifiers) focus 
         - either people in the treatment group will be cured($P(Y_i=1)$) or not cured($P(Y_i=0)$).
     - ITE = $2\left[P(Z_i=1) + 0.5 -1 \right] = 2\left[P(Z_i=1) -0.5 \right] = 2P(Z_i=1) -1$
 
-# Causal inference is same as Uplift modelling?
+# Causal inference is same as Uplift modelling?<a name="ci_vs_um"></a>
 - Causal inference focuses on understanding the *causal relationship between variables*, particularly in observational studies where experiments are not feasible or ethical. 
     - It aims to determine the effect of a treatment or intervention on an outcome by accounting for potential confounding variables.
 - Uplift modeling, on the other hand, is a technique used in marketing and personalized interventions to *predict* the *incremental impact of a treatment* or action *on an individual*'s behavior. 
