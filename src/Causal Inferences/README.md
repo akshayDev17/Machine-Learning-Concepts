@@ -218,3 +218,16 @@ While both causal inference and uplift modeling deal with understanding the effe
 - [Causal inference as a blind spot of data scientists](https://dzidas.com/ml/2023/10/15/blind-spot-ds/)
 - [Strong ignorability: confusion on the relationship between outcomes and treatment](https://stats.stackexchange.com/questions/474616/strong-ignorability-confusion-on-the-relationship-between-outcomes-and-treatmen)
 - 
+
+# Appendix
+
+## Notebook: `hypothesisTesting.ipynb`
+- intro to chi-squared distribution, f-statistic, f-distribution
+- what is hypothesis testing w.r.t. null hypothesis in linear regression.
+
+## Notebook: `Feature_Selection_using_FilterSelect_in_causalml.ipynb`
+- 3 feature selection methods used by [`causalml`](https://causalml.readthedocs.io/en/latest/examples/feature_selection.html)
+    - using F-statistic
+    - using likelihood ratio
+    - using KL Divergence.
+- talks about problems with all the 3 approaches as well.
