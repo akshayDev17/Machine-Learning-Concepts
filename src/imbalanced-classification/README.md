@@ -168,4 +168,15 @@
 4. This means **test precision < Train precision**.
 5. For test recall, it could remain relatively unchanged, or even improve slightly, since neither of TP nor FN is affected due to this special training scenario.
    1. recall could improve because the model could capture more true positives, as part of an increased volume of positive label prediction.
-6. 
+
+
+## When does FP matter more than FN?
+- precision becomes more relevant than recall
+- an example: **Email Spam classification**, since a non-spam email (which could be important) shouldn't be forcefully classified as a spam.
+   - missing work-related emails or urgent messages due to them being in the spam folder.
+   - poor user experience, user has to always check the spam folder to see whether an important mail has ended up there.
+   - A spam email misclassified as not-spam might still annoy the user but can often be ignored or manually deleted without major harm.
+
+## When does FN matter more than FP?
+- recall is more relevant than precision
+
