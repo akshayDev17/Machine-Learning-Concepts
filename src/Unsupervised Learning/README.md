@@ -1,10 +1,9 @@
 # Clustering (unsupervised learning) — explained from zero
 
 > **Who this is for:** someone new to machine learning. You need school algebra (averages, squares, square roots) and a
-> little Python. Every claim here is demonstrated in the labs: [`lab/clustering_lab.ipynb`](lab/clustering_lab.ipynb)
-> (scikit-learn / SciPy) and [`lab/clustering_from_scratch.ipynb`](lab/clustering_from_scratch.ipynb) (the same
-> algorithms in NumPy, checked against the libraries). "Lab N" below means the library notebook; "scratch §N" the
-> from-scratch one.
+> little Python. Every claim here is demonstrated in the labs under [`lab/`](lab/README.md): one folder per method,
+> each with a library notebook (scikit-learn / SciPy) and a from-scratch notebook (the same algorithm in NumPy,
+> checked against the library). "Lab N" below means library Lab N; the labs are numbered 1–12 across the folders.
 
 ## Table of contents
 
@@ -114,7 +113,7 @@ loop.
 3. **Update:** move every centroid to the **mean** of the points assigned to it.
 4. Repeat 2–3 until the assignments stop changing (equivalently, no centroid moves).
 
-Lab 1 shows the centroids walking to their final places; scratch §1 implements the two steps and matches
+Lab 1 shows the centroids walking to their final places; [k-means from scratch](lab/01-kmeans/kmeans_from_scratch.ipynb) implements the two steps and matches
 scikit-learn's labels and inertia exactly from the same start.
 
 ### 3.3 Why it always stops
@@ -135,7 +134,7 @@ recovers.
 - **k-means++** spreads the starts out: the first centroid is a random point from the sample; each next centroid is drawn from the remaining samples with probability
 proportional to $D(x)^2$, the squared distance to the nearest centroid already chosen. 
 - On 10 blobs (Lab 2), only 3% of random starts reach the best answer against 50 % for k-means++ (scikit-learn's greedy variant, which tries several
-candidates per step; our plain version in scratch §1 reaches 29 %). 
+candidates per step; our plain version in [k-means from scratch](lab/01-kmeans/kmeans_from_scratch.ipynb) reaches 29 %). 
 - k-means++ also comes with a guarantee: on average its result is within a factor of about $8(\ln k + 2)$ of the best possible inertia.
 
 > In practice: use k-means++ (scikit-learn's default) and run it several times (`n_init`), keeping the lowest inertia.
@@ -175,7 +174,7 @@ data points, less pulled by outliers).
 ### 3.7 Cost and variants
 
 Each iteration costs about $n \cdot k \cdot d$ operations, so k-means handles millions of rows. **MiniBatchKMeans**
-updates centroids from small random batches for even bigger data. Implementation hurdles (scratch §1): a centroid that
+updates centroids from small random batches for even bigger data. Implementation hurdles ([k-means from scratch](lab/01-kmeans/kmeans_from_scratch.ipynb)): a centroid that
 loses all its points (its mean is undefined), and the memory needed to compute all point-to-centroid distances at once.
 
 ## 4. Hierarchical (agglomerative) clustering
@@ -205,7 +204,7 @@ The other direction, **divisive** clustering (start with one cluster and split),
 | centroid | distance between the two means | rarely used: merge heights can go *down*, which makes the tree hard to read |
 
 After a merge, the distance from the new cluster to any other follows from distances already known (the
-**Lance–Williams formula**, scratch §3), so point distances are computed only once.
+**Lance–Williams formula**, [hierarchical from scratch](lab/02-hierarchical/hierarchical_from_scratch.ipynb)), so point distances are computed only once.
 
 ### 4.3 Judging the tree: the cophenetic correlation
 
@@ -216,11 +215,11 @@ the same thing.
 
 ### 4.4 Cost and use cases
 
-The distance matrix needs $n^2$ memory; the naive algorithm takes about $n^3$ time (scratch §3), good libraries about
+The distance matrix needs $n^2$ memory; the naive algorithm takes about $n^3$ time ([hierarchical from scratch](lab/02-hierarchical/hierarchical_from_scratch.ipynb)), good libraries about
 $n^2$. That limits it to roughly tens of thousands of points. Use it when the data is small enough, when you want to
 see structure at **several scales** (clusters with sub-clusters: product categories, species, document topics), or
 when you don't know k and want to choose by looking. Ties between equal distances are common with rounded
-measurements; they change the order of merges but not the heights (scratch §3).
+measurements; they change the order of merges but not the heights ([hierarchical from scratch](lab/02-hierarchical/hierarchical_from_scratch.ipynb)).
 
 ## 5. DBSCAN
 
@@ -245,7 +244,7 @@ Two settings: a radius **eps** ($\varepsilon$) and a count **min_samples**.
 4. Whatever was never added is noise (label −1).
 
 A border point within eps of core points from two clusters gets only one label, that of whichever cluster reaches it
-first, so it depends on the order of the data (scratch §4). The original notes' rule "assign it to the nearest core
+first, so it depends on the order of the data ([DBSCAN from scratch](lab/03-dbscan/dbscan_from_scratch.ipynb)). The original notes' rule "assign it to the nearest core
 point" is a reasonable variant, but it's not what the original paper or scikit-learn does. Core points and noise never
 depend on the order.
 
@@ -295,7 +294,7 @@ reachabilities exactly.
 ### 6.3 Extracting clusters
 
 * **Horizontal cut at height eps:** gives the same clusters as DBSCAN with that eps (up to the odd border point), from
-  one OPTICS run, without refitting (Lab 9, scratch §5).
+  one OPTICS run, without refitting (Lab 9, [OPTICS from scratch](lab/04-optics-hdbscan/optics_from_scratch.ipynb)).
 * **xi method:** finds valleys by their steep sides (a drop of at least a fraction xi), so different valleys can be at
   different heights. With xi = 0.1 it finds all three blobs of the mixed-density data that defeated DBSCAN (Lab 9), but
   xi is a setting too: 0.05 calls a third of the sparse blob noise.
@@ -369,20 +368,23 @@ a verdict (§7).
 | "If an algorithm returns clusters, the data has clusters." | k-means cuts uniform noise into k pieces just the same (Lab 3). |
 | "A higher silhouette means a better clustering." | Only among round clusters; it prefers the wrong k-means split of the moons over the right DBSCAN one (Lab 11). |
 | "DBSCAN needs no tuning." | It needs eps, and the right range can be narrow (Lab 8). |
-| "DBSCAN assigns a border point to the nearest core point's cluster." | It goes to whichever cluster reaches it first; the order of the data decides (scratch §4). |
-| "OPTICS is a different algorithm with different results from DBSCAN." | Cutting its reachability plot at eps reproduces DBSCAN at eps (Lab 9, scratch §5). |
+| "DBSCAN assigns a border point to the nearest core point's cluster." | It goes to whichever cluster reaches it first; the order of the data decides ([DBSCAN from scratch](lab/03-dbscan/dbscan_from_scratch.ipynb)). |
+| "OPTICS is a different algorithm with different results from DBSCAN." | Cutting its reachability plot at eps reproduces DBSCAN at eps (Lab 9, [OPTICS from scratch](lab/04-optics-hdbscan/optics_from_scratch.ipynb)). |
 | "Scaling doesn't matter for clustering." | It can be the difference between ARI 0.37 and 0.90 (Lab 10). |
-| "Hierarchical clustering is always O(n³)." | The naive version is; good implementations are about n² (scratch §3 vs SciPy). |
+| "Hierarchical clustering is always O(n³)." | The naive version is; good implementations are about n² ([hierarchical from scratch](lab/02-hierarchical/hierarchical_from_scratch.ipynb) vs SciPy). |
 
 ## 11. The labs
 
 Everything above is demonstrated in [`lab/`](lab/README.md): setup, run instructions and a map of which lab answers
 which question are in **[`lab/README.md`](lab/README.md)**.
 
-| Notebook | Contents | Sections |
-|---|---|---|
-| [`clustering_lab.ipynb`](lab/clustering_lab.ipynb) | 12 labs in 4 parts with scikit-learn / SciPy: k-means (1–4), hierarchical (5–6), density (7–9), in practice (10–12) | 2–9 |
-| [`clustering_from_scratch.ipynb`](lab/clustering_from_scratch.ipynb) | k-means + k-means++, silhouette, agglomerative (Lance–Williams), DBSCAN, OPTICS in NumPy, each checked against the library, with implementation hurdles | 3–6 |
+| Folder | Library lab (scikit-learn / SciPy) | From scratch (NumPy, checked against the library) | Sections |
+|---|---|---|---|
+| [`lab/01-kmeans/`](lab/01-kmeans/) | [Labs 1–4](lab/01-kmeans/kmeans_lab.ipynb): how it moves, starts, choosing k, failures | [k-means, k-means++, 3-pair toy, silhouette, elbow](lab/01-kmeans/kmeans_from_scratch.ipynb) | 3 |
+| [`lab/02-hierarchical/`](lab/02-hierarchical/) | [Labs 5–6](lab/02-hierarchical/hierarchical_lab.ipynb): dendrograms, linkages | [agglomerative with Lance–Williams](lab/02-hierarchical/hierarchical_from_scratch.ipynb) | 4 |
+| [`lab/03-dbscan/`](lab/03-dbscan/) | [Labs 7–8](lab/03-dbscan/dbscan_lab.ipynb): eps from the k-distance plot, mixed density | [DBSCAN](lab/03-dbscan/dbscan_from_scratch.ipynb) | 5 |
+| [`lab/04-optics-hdbscan/`](lab/04-optics-hdbscan/) | [Lab 9](lab/04-optics-hdbscan/optics_hdbscan_lab.ipynb): reachability plot, xi, HDBSCAN | [OPTICS and its eps cuts](lab/04-optics-hdbscan/optics_from_scratch.ipynb) | 6 |
+| [`lab/05-in-practice/`](lab/05-in-practice/) | [Labs 10–12](lab/05-in-practice/in_practice_lab.ipynb): scaling, scores without labels, real data, summary, guide | — (no new algorithm) | 2.2, 7, 9 |
 
 The original notebooks this folder grew from are kept in [`_archive/`](_archive/).
 
@@ -437,9 +439,9 @@ The original notebooks this folder grew from are kept in [`_archive/`](_archive/
 1. **Scope.** The folder held four notebooks (k-means, hierarchical, DBSCAN, OPTICS), so those four algorithms are the
    core, plus HDBSCAN as the modern follow-up to OPTICS and the scores used to judge clusters. Gaussian mixture models,
    spectral clustering and mean shift are only mentioned.
-2. **Structure.** As requested: this theory README, and a `lab/` folder with its own README, one notebook using the
-   library implementations and one from-scratch notebook with markdown explanations and line-by-line code comments.
-   The folder is called `lab/` like the PCA, LDA and Feature-Eng folders.
+2. **Structure.** This theory README, and a `lab/` folder with its own README and one folder per method, each with a
+   notebook using the library implementations and a from-scratch notebook with markdown explanations and line-by-line
+   code comments. The in-practice folder has only a library notebook, because it introduces no new algorithm.
 3. **Original notes.** Their content (algorithm steps, the elbow method and its programmatic detection, the problems
    lists, the hierarchical use cases, the DBSCAN reference) is merged into the sections above; the notebooks themselves
    were moved to `_archive/` unchanged. One rule was corrected: DBSCAN gives a border point to the first cluster that
