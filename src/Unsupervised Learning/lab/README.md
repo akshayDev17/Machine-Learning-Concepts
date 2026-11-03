@@ -1,19 +1,20 @@
 # Clustering Lab — run it, look at it, understand it
 
-This folder is the hands-on half of the clustering notes. The theory is in [`../README.md`](../README.md); every claim
-made there is shown here with code, numbers and plots. There is **one folder per method**, and each holds two
-notebooks: a **library lab** (scikit-learn / SciPy) and a **from-scratch** notebook (the same algorithm rebuilt in
-NumPy and checked against the library). Each notebook stands alone and runs in a few seconds.
+This folder is the hands-on half of the clustering notes; the [parent README](../README.md) names the ideas and holds
+the [method-choice flowchart](../README.md#3-choosing-a-method-the-flowchart). There is **one folder per method**, and
+each holds a **README** with that method's theory and two notebooks that show every claim in it with code, numbers and
+plots: a **library lab** (scikit-learn / SciPy) and a **from-scratch** notebook (the same algorithm rebuilt in NumPy and
+checked against the library). Each notebook stands alone and runs in a few seconds.
 
 ## What is where
 
-| Folder | Library lab | From scratch | Labs |
-|---|---|---|---|
-| [`01-kmeans/`](01-kmeans/) | [`kmeans_lab.ipynb`](01-kmeans/kmeans_lab.ipynb) | [`kmeans_from_scratch.ipynb`](01-kmeans/kmeans_from_scratch.ipynb): Lloyd's algorithm, k-means++, the exact 3-pair toy, silhouette and elbow | 1–4 |
-| [`02-hierarchical/`](02-hierarchical/) | [`hierarchical_lab.ipynb`](02-hierarchical/hierarchical_lab.ipynb) | [`hierarchical_from_scratch.ipynb`](02-hierarchical/hierarchical_from_scratch.ipynb): agglomerative clustering with the Lance–Williams update | 5–6 |
-| [`03-dbscan/`](03-dbscan/) | [`dbscan_lab.ipynb`](03-dbscan/dbscan_lab.ipynb) | [`dbscan_from_scratch.ipynb`](03-dbscan/dbscan_from_scratch.ipynb): DBSCAN, breadth-first | 7–8 |
-| [`04-optics-hdbscan/`](04-optics-hdbscan/) | [`optics_hdbscan_lab.ipynb`](04-optics-hdbscan/optics_hdbscan_lab.ipynb) | [`optics_from_scratch.ipynb`](04-optics-hdbscan/optics_from_scratch.ipynb): OPTICS and cutting it at an eps | 9 |
-| [`05-in-practice/`](05-in-practice/) | [`in_practice_lab.ipynb`](05-in-practice/in_practice_lab.ipynb): scaling, scores without labels, every method on real data, the summary of all labs and a "which algorithm when" guide | — (no new algorithm) | 10–12 |
+| Folder | Theory | Library lab | From scratch | Labs |
+|---|---|---|---|---|
+| [`01-kmeans/`](01-kmeans/) | [README](01-kmeans/README.md) | [`kmeans_lab.ipynb`](01-kmeans/kmeans_lab.ipynb) | [`kmeans_from_scratch.ipynb`](01-kmeans/kmeans_from_scratch.ipynb): Lloyd's algorithm, k-means++, the exact 3-pair toy, silhouette and elbow | 1–4 |
+| [`02-hierarchical/`](02-hierarchical/) | [README](02-hierarchical/README.md) | [`hierarchical_lab.ipynb`](02-hierarchical/hierarchical_lab.ipynb) | [`hierarchical_from_scratch.ipynb`](02-hierarchical/hierarchical_from_scratch.ipynb): agglomerative clustering with the Lance–Williams update | 5–6 |
+| [`03-dbscan/`](03-dbscan/) | [README](03-dbscan/README.md) | [`dbscan_lab.ipynb`](03-dbscan/dbscan_lab.ipynb) | [`dbscan_from_scratch.ipynb`](03-dbscan/dbscan_from_scratch.ipynb): DBSCAN, breadth-first | 7–8 |
+| [`04-optics-hdbscan/`](04-optics-hdbscan/) | [README](04-optics-hdbscan/README.md) | [`optics_hdbscan_lab.ipynb`](04-optics-hdbscan/optics_hdbscan_lab.ipynb) | [`optics_from_scratch.ipynb`](04-optics-hdbscan/optics_from_scratch.ipynb): OPTICS and cutting it at an eps | 9 |
+| [`05-in-practice/`](05-in-practice/) | [README](05-in-practice/README.md) | [`in_practice_lab.ipynb`](05-in-practice/in_practice_lab.ipynb): scaling, scores without labels, every method on real data, the summary of all labs and a "which algorithm when" guide | — (no new algorithm) | 10–12 |
 
 Also here: [`requirements.txt`](requirements.txt) (the Python packages every notebook needs) and this guide. All
 notebooks are already executed: you can read every result on GitHub without installing anything. Lab numbers run
@@ -72,40 +73,44 @@ demonstrated on a small case and then fixed.
 
 **Library labs**
 
-| Lab | Question | README section | What to look at |
+| Lab | Question | Theory (folder README) | What to look at |
 |---|---|---|---|
 | **[`01-kmeans/kmeans_lab.ipynb`](01-kmeans/kmeans_lab.ipynb)** | | | |
-| 1 | How does k-means move? | 3.2–3.3 | centroid paths; inertia 4757 → 1719, never rising |
-| 2 | Why does the start matter? | 3.4 | inertia histograms: 3 % (random) vs 50 % (k-means++) of runs reach the best |
-| 3 | How do I choose k? | 3.5 | elbow and silhouette on clear blobs, two pairs, and pure noise (silhouette 0.41) |
-| 4 | Where does k-means fail? | 3.6 | six shapes: stretched 0.56, moons 0.25, circles 0.00; outliers stealing a cluster |
+| 1 | How does k-means move? | [§3–4](01-kmeans/README.md#3-the-algorithm-lloyds-algorithm) | centroid paths; inertia 4757 → 1719, never rising |
+| 2 | Why does the start matter? | [§5](01-kmeans/README.md#5-the-start-matters-k-means) | inertia histograms: 3 % (random) vs 50 % (k-means++) of runs reach the best |
+| 3 | How do I choose k? | [§6](01-kmeans/README.md#6-choosing-k) | elbow and silhouette on clear blobs, two pairs, and pure noise (silhouette 0.41) |
+| 4 | Where does k-means fail? | [§7](01-kmeans/README.md#7-assumptions-and-failures) | six shapes: stretched 0.56, moons 0.25, circles 0.00; outliers stealing a cluster |
 | **[`02-hierarchical/hierarchical_lab.ipynb`](02-hierarchical/hierarchical_lab.ipynb)** | | | |
-| 5 | How do I read and cut a dendrogram? | 4.1 | linkage matrix rows; cut at height 3.0 = 3 clusters; scikit-learn agrees |
-| 6 | What does the linkage change? | 4.2–4.3 | 3 × 4 grid: single gets the moons but breaks on a bridge; iris cophenetic correlations |
+| 5 | How do I read and cut a dendrogram? | [§1](02-hierarchical/README.md#1-the-algorithm) | linkage matrix rows; cut at height 3.0 = 3 clusters; scikit-learn agrees |
+| 6 | What does the linkage change? | [§2–3](02-hierarchical/README.md#2-linkage-the-distance-between-two-clusters) | 3 × 4 grid: single gets the moons but breaks on a bridge; iris cophenetic correlations |
 | **[`03-dbscan/dbscan_lab.ipynb`](03-dbscan/dbscan_lab.ipynb)** | | | |
-| 7 | How does DBSCAN work, and how do I pick eps? | 5.1–5.3 | k-distance plot (eps 0.164); core / border / noise; moons ARI 1.00 |
-| 8 | When does DBSCAN fail? | 5.4 | eps × min_samples heatmap; no eps fits dense and sparse blobs together |
+| 7 | How does DBSCAN work, and how do I pick eps? | [§1–3](03-dbscan/README.md#1-definitions) | k-distance plot (eps 0.164); core / border / noise; moons ARI 1.00 |
+| 8 | When does DBSCAN fail? | [§4](03-dbscan/README.md#4-strengths-and-weaknesses) | eps × min_samples heatmap; no eps fits dense and sparse blobs together |
 | **[`04-optics-hdbscan/optics_hdbscan_lab.ipynb`](04-optics-hdbscan/optics_hdbscan_lab.ipynb)** | | | |
-| 9 | What do OPTICS and HDBSCAN add? | 6 | reachability plot with DBSCAN cuts; xi and HDBSCAN find all three blobs |
+| 9 | What do OPTICS and HDBSCAN add? | [§1–5](04-optics-hdbscan/README.md#1-definitions) | reachability plot with DBSCAN cuts; xi and HDBSCAN find all three blobs |
 | **[`05-in-practice/in_practice_lab.ipynb`](05-in-practice/in_practice_lab.ipynb)** | | | |
-| 10 | Does scaling matter? | 2.2 | wine k-means 0.37 → 0.90 after standardising |
-| 11 | How do I score clusters without labels? | 7 | silhouette prefers the wrong answer on the moons (0.49 vs 0.05) |
-| 12 | Which method on real data? | 9 | ARI table for iris, wine, digits; no method wins everywhere |
+| 10 | Does scaling matter? | [§2](05-in-practice/README.md#2-scaling) | wine k-means 0.37 → 0.90 after standardising |
+| 11 | How do I score clusters without labels? | [§3](05-in-practice/README.md#3-judging-a-clustering) | silhouette prefers the wrong answer on the moons (0.49 vs 0.05) |
+| 12 | Which method on real data? | [flowchart](../README.md#3-choosing-a-method-the-flowchart) | ARI table for iris, wine, digits; no method wins everywhere |
 
 **From-scratch notebooks**
 
-| Notebook | Algorithm | Matches | Hurdles shown |
-|---|---|---|---|
-| [`kmeans_from_scratch`](01-kmeans/kmeans_from_scratch.ipynb) | k-means (Lloyd), k-means++ | `KMeans`: identical labels, inertia, iterations | empty cluster → NaN; n × k × d memory |
-| [↳ toy](01-kmeans/kmeans_from_scratch.ipynb#toy) | why the start matters: 3 pairs, every random start traced, exact k-means++ probabilities | `KMeans` from all 20 starts; Monte Carlo of our k-means++ | random init stuck 20 % of the time at (2/3)[1 + (1 + r)²] × the optimum; k-means++ ≈ 0.49 / (1 + r)² |
-| [↳ choosing k](01-kmeans/kmeans_from_scratch.ipynb#sec-2) | silhouette, elbow (chord rule) | `silhouette_score` at every k | — |
-| [`hierarchical_from_scratch`](02-hierarchical/hierarchical_from_scratch.ipynb) | agglomerative, 4 linkages (Lance–Williams) | SciPy `linkage`: identical merge heights and partitions | ties; rounding changes the tree |
-| [`dbscan_from_scratch`](03-dbscan/dbscan_from_scratch.ipynb) | DBSCAN | `DBSCAN`: identical labels and core points | border point between two clusters |
-| [`optics_from_scratch`](04-optics-hdbscan/optics_from_scratch.ipynb) | OPTICS, cluster extraction at eps | `OPTICS`, `cluster_optics_dbscan`: identical ordering, reachability, cuts | priority queue without decrease-key |
+Their parts are numbered like the library labs: Lab N in a from-scratch notebook rebuilds what library Lab N runs, and
+the two link to each other. Labs 4, 8, 10–12 have no from-scratch part (no new algorithm to build).
+
+| Lab | Notebook part | Algorithm | Matches | Hurdles shown |
+|---|---|---|---|---|
+| 1 | [`kmeans_from_scratch` · Lab 1](01-kmeans/kmeans_from_scratch.ipynb#lab-1) | k-means (Lloyd) | `KMeans`: identical labels, inertia, iterations | empty cluster → NaN; n × k × d memory |
+| 2 | [`kmeans_from_scratch` · Lab 2](01-kmeans/kmeans_from_scratch.ipynb#lab-2) | k-means++ | same idea as `KMeans`' greedy variant (29 % vs 50 % best runs) | — |
+| 2 | [↳ toy](01-kmeans/kmeans_from_scratch.ipynb#toy) | why the start matters: 3 pairs, every random start traced, exact k-means++ probabilities | `KMeans` from all 20 starts; Monte Carlo of our k-means++ | random init stuck 20 % of the time at (2/3)[1 + (1 + r)²] × the optimum; k-means++ ≈ 0.49 / (1 + r)² |
+| 3 | [`kmeans_from_scratch` · Lab 3](01-kmeans/kmeans_from_scratch.ipynb#lab-3) | silhouette, elbow (chord rule) | `silhouette_score` at every k | — |
+| 5–6 | [`hierarchical_from_scratch` · Labs 5–6](02-hierarchical/hierarchical_from_scratch.ipynb#lab-5) | agglomerative, 4 linkages (Lance–Williams) | SciPy `linkage`: identical merge heights and partitions | ties; rounding changes the tree |
+| 7 | [`dbscan_from_scratch` · Lab 7](03-dbscan/dbscan_from_scratch.ipynb#lab-7) | DBSCAN | `DBSCAN`: identical labels and core points | border point between two clusters |
+| 9 | [`optics_from_scratch` · Lab 9](04-optics-hdbscan/optics_from_scratch.ipynb#lab-9) | OPTICS, cluster extraction at eps | `OPTICS`, `cluster_optics_dbscan`: identical ordering, reachability, cuts | priority queue without decrease-key |
 
 ## How to interpret the results — quick guide
 
-* **ARI** (adjusted Rand index): agreement with the groups the data was generated from. 1 = identical, about 0 =
+* **ARI** ([adjusted Rand index](05-in-practice/README.md#the-adjusted-rand-index-ari-step-by-step)): agreement with the groups the data was generated from. 1 = identical, about 0 =
   random. Real problems have no such groups; it is used here only to grade methods. Noise points count as one group.
 * **Inertia**: sum of squared distances to the own centroid. Lower is tighter, but it always falls as k grows.
 * **Silhouette**: −1 to 1, higher = tighter and better separated. Rewards round clusters (Lab 11).
