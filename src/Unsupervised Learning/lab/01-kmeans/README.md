@@ -97,6 +97,8 @@ candidates per step; our plain version in [k-means from scratch](kmeans_from_scr
   for real clusters): k-means always returns clusters, even when there are none.
 * Others: the **gap statistic** (compares the inertia with that of random data), and domain knowledge ("we can run 5
   marketing campaigns").
+* **Defending a k:** why the elbow matters, what goes wrong past it, and how to show it with or without true labels
+  (silhouette, stability, gap) are worked through as interview questions in [interview discussion](interview_discussion.md).
 
 ## 7. Assumptions and failures
 
@@ -120,9 +122,38 @@ Options: remove outliers first, use a density method ([DBSCAN](../03-dbscan/READ
 ## 8. Cost and variants
 
 Each iteration costs about $n \cdot k \cdot d$ operations, so k-means handles millions of rows. **MiniBatchKMeans**
-updates centroids from small random batches for even bigger data. Implementation hurdles
+updates centroids from small random batches for even bigger data (Lab 4b in [the library lab](kmeans_lab.ipynb#lab-4b)
+and [from scratch](kmeans_from_scratch.ipynb#lab-4b)):
+* Its inertia was within 0.009 % of k-means' on 8 blobs of up to 3,000,000 points, and about 3× faster at that size.
+  It was not faster at 1,000,000: easy data needs only 3 full k-means passes, and mini-batch's time depends on when its
+  stopping rule fires, not on n.
+* Its real strength is `partial_fit`: it learns from one chunk at a time, so the data never has to fit in memory.
+* Each centroid's step must shrink (step 1 / points absorbed, a running mean); a fixed step keeps it jittering.
+
+Implementation hurdles
 ([k-means from scratch](kmeans_from_scratch.ipynb)): a centroid that loses all its points (its mean is undefined), and
 the memory needed to compute all point-to-centroid distances at once.
+
+### k-means as a building block: vector search
+
+k-means is also used inside other tools, where its job is to **partition** the data, not to discover groups. The best
+known case is the IVF ("inverted file") index of [FAISS](https://github.com/facebookresearch/faiss), Meta's library
+for nearest-neighbour search over embeddings:
+
+* **Training:** k-means with `nlist` clusters runs on the vectors; its centroids become the centres of `nlist` cells,
+  and every vector is stored in the cell of its nearest centroid.
+* **Search:** a query is compared with the vectors in only its `nprobe` nearest cells, not with all n. More cells
+  searched means better recall and slower queries.
+* **k is a budget, not a discovery:** `nlist` is chosen for the speed / recall trade-off; the elbow and silhouette play
+  no part, and nobody asks whether the cells are "true" groups.
+* **Scale:** k-means trains on at most 256 points per centroid by default (larger training sets are subsampled); then
+  all n vectors are assigned to cells, which costs only n · nlist · d and runs in parallel. This is the same "fit on a
+  sample, assign everyone" idea as MiniBatchKMeans above.
+* **Source:** [`faiss/IndexIVF.cpp`](https://github.com/facebookresearch/faiss/blob/main/faiss/IndexIVF.cpp) trains
+  the coarse quantizer with "k-means on the training rows" (`Clustering clus(d, nlist, cp)`, whose centroids are added
+  to the quantizer); [`faiss/Clustering.h`](https://github.com/facebookresearch/faiss/blob/main/faiss/Clustering.h)
+  defines that class ("K-means clustering based on assignment - centroid update iterations") and
+  `max_points_per_centroid = 256`.
 
 ## 9. Common misconceptions
 

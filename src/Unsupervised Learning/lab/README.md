@@ -80,6 +80,7 @@ demonstrated on a small case and then fixed.
 | 2 | Why does the start matter? | [§5](01-kmeans/README.md#5-the-start-matters-k-means) | inertia histograms: 3 % (random) vs 50 % (k-means++) of runs reach the best |
 | 3 | How do I choose k? | [§6](01-kmeans/README.md#6-choosing-k) | elbow and silhouette on clear blobs, two pairs, and pure noise (silhouette 0.41) |
 | 4 | Where does k-means fail? | [§7](01-kmeans/README.md#7-assumptions-and-failures) | six shapes: stretched 0.56, moons 0.25, circles 0.00; outliers stealing a cluster |
+| 4b | k-means on millions of rows? | [§8](01-kmeans/README.md#8-cost-and-variants) | MiniBatchKMeans: about 3× faster at 3,000,000 points, inertia within 0.009 %; `partial_fit` on streamed chunks |
 | **[`02-hierarchical/hierarchical_lab.ipynb`](02-hierarchical/hierarchical_lab.ipynb)** | | | |
 | 5 | How do I read and cut a dendrogram? | [§1](02-hierarchical/README.md#1-the-algorithm) | linkage matrix rows; cut at height 3.0 = 3 clusters; scikit-learn agrees |
 | 6 | What does the linkage change? | [§2–3](02-hierarchical/README.md#2-linkage-the-distance-between-two-clusters) | 3 × 4 grid: single gets the moons but breaks on a bridge; iris cophenetic correlations |
@@ -96,7 +97,7 @@ demonstrated on a small case and then fixed.
 **From-scratch notebooks**
 
 Their parts are numbered like the library labs: Lab N in a from-scratch notebook rebuilds what library Lab N runs, and
-the two link to each other. Labs 4, 8, 10–12 have no from-scratch part (no new algorithm to build).
+the two link to each other. Labs 4, 8, 10–12 have no from-scratch part (no new algorithm to build); Lab 4b does.
 
 | Lab | Notebook part | Algorithm | Matches | Hurdles shown |
 |---|---|---|---|---|
@@ -104,6 +105,7 @@ the two link to each other. Labs 4, 8, 10–12 have no from-scratch part (no new
 | 2 | [`kmeans_from_scratch` · Lab 2](01-kmeans/kmeans_from_scratch.ipynb#lab-2) | k-means++ | same idea as `KMeans`' greedy variant (29 % vs 50 % best runs) | — |
 | 2 | [↳ toy](01-kmeans/kmeans_from_scratch.ipynb#toy) | why the start matters: 3 pairs, every random start traced, exact k-means++ probabilities | `KMeans` from all 20 starts; Monte Carlo of our k-means++ | random init stuck 20 % of the time at (2/3)[1 + (1 + r)²] × the optimum; k-means++ ≈ 0.49 / (1 + r)² |
 | 3 | [`kmeans_from_scratch` · Lab 3](01-kmeans/kmeans_from_scratch.ipynb#lab-3) | silhouette, elbow (chord rule) | `silhouette_score` at every k | — |
+| 4b | [`kmeans_from_scratch` · Lab 4b](01-kmeans/kmeans_from_scratch.ipynb#lab-4b) | mini-batch k-means (running-mean update) | `MiniBatchKMeans` 0.029 % vs ours 0.028 % above Lloyd; ARI 0.983 | a fixed step size never settles |
 | 5–6 | [`hierarchical_from_scratch` · Labs 5–6](02-hierarchical/hierarchical_from_scratch.ipynb#lab-5) | agglomerative, 4 linkages (Lance–Williams) | SciPy `linkage`: identical merge heights and partitions | ties; rounding changes the tree |
 | 7 | [`dbscan_from_scratch` · Lab 7](03-dbscan/dbscan_from_scratch.ipynb#lab-7) | DBSCAN | `DBSCAN`: identical labels and core points | border point between two clusters |
 | 9 | [`optics_from_scratch` · Lab 9](04-optics-hdbscan/optics_from_scratch.ipynb#lab-9) | OPTICS, cluster extraction at eps | `OPTICS`, `cluster_optics_dbscan`: identical ordering, reachability, cuts | priority queue without decrease-key |

@@ -111,9 +111,9 @@ flowchart TD
     D{"4. Same density<br/>everywhere?"}
     D1["DBSCAN works"]
     D2["DBSCAN out<br/>HDBSCAN, OPTICS in"]
-    K{"5. Is k known?"}
-    K1["k-means, or cut<br/>the dendrogram at k"]
-    K2["density methods find k<br/>elbow and silhouette only as hints"]
+    K{"5. Who sets the<br/>number of clusters?"}
+    K1["k-means at that k,<br/>or cut the dendrogram into k"]
+    K2["density methods find it themselves<br/>k-means: scan k, check elbow, silhouette,<br/>stability and gap together"]
     Z{"6. How many rows?"}
     Z1["anything"]
     Z2["agglomerative out"]
@@ -135,8 +135,8 @@ flowchart TD
     D -- no --> D2
     D1 --> K
     D2 --> K
-    K -- yes --> K1
-    K -- no --> K2
+    K -- "a business limit, e.g. 5 campaigns" --> K1
+    K -- "the data, the usual case" --> K2
     K1 --> Z
     K2 --> Z
     Z -- "up to ~10k" --> Z1
@@ -171,9 +171,16 @@ flowchart TD
 4. **Density.** One clear bend in the k-distance plot → DBSCAN with eps at the bend. Dense and sparse clusters
    together → no single eps works (Lab 8, [DBSCAN §4](lab/03-dbscan/README.md#4-strengths-and-weaknesses)): HDBSCAN or
    OPTICS with xi find all three blobs (Lab 9, [HDBSCAN](lab/04-optics-hdbscan/README.md#4-hdbscan)).
-5. **Is k known?** Yes → k-means, or cut the dendrogram at k. No → the density methods find k themselves; the elbow
-   and silhouette are only hints, since on pure noise they still pick 4 (silhouette 0.41, Lab 3,
-   [choosing k](lab/01-kmeans/README.md#6-choosing-k)). k-means never answers "there are no clusters".
+5. **Who sets the number of clusters?** In unsupervised work it is almost never known; the data arrives unlabelled.
+   * **A business limit sets it** (5 marketing campaigns, a 16-colour palette, a budget of k segments): k-means at that
+     k, or cut the dendrogram into k. The question is then whether k clusters are a useful summary, not whether they
+     are the "true" ones.
+   * **The data must say (the usual case):** the density methods find the number themselves, and a dendrogram can be
+     cut at a height instead of a count. k-means needs k chosen from evidence: scan k and read the elbow, silhouette,
+     stability on resamples and the gap statistic together
+     ([interview discussion](lab/01-kmeans/interview_discussion.md)). No single one is enough: on pure noise the elbow
+     and silhouette still pick 4 (silhouette 0.41, Lab 3, [choosing k](lab/01-kmeans/README.md#6-choosing-k)), and of
+     these only the gap statistic can answer "there are no clusters".
 6. **How many rows?** Up to about 10⁴, anything. Beyond that, agglomerative's n² memory is the limit. At millions,
    MiniBatchKMeans ([k-means §8](lab/01-kmeans/README.md#8-cost-and-variants)); OPTICS is the slowest of the density
    methods (Lab 9).
@@ -187,7 +194,7 @@ flowchart TD
 
 | Method | Fits | Weak spot | Evidence |
 |---|---|---|---|
-| k-means | round clusters of similar size, k known, any number of rows | other shapes, outliers, unequal spreads; always returns k clusters | Labs 3, 4 |
+| k-means | round clusters of similar size, k fixed by a business limit or chosen from evidence, any number of rows | other shapes, outliers, unequal spreads; always returns k clusters | Labs 3, 4 |
 | agglomerative, ward | like k-means, plus a tree | like k-means; n² memory | Lab 6 |
 | agglomerative, single | chains with clean gaps | a bridge of points or noise merges clusters | Lab 6 |
 | DBSCAN | any shape, noise, one density | mixed densities; a narrow eps range; many features | Labs 7, 8 |
