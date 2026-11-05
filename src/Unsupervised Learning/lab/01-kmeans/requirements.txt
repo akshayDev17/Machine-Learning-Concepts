@@ -1,0 +1,9 @@
+# kmeans_production.py needs the first three; the notebook adds matplotlib and a kernel; nbclient/nbformat let
+# setup.sh --run execute the notebook headlessly. Tested with Python 3.12.8, numpy 2.5, scipy 1.18, scikit-learn 1.9.1.
+numpy>=1.26
+scipy>=1.11
+scikit-learn>=1.9
+matplotlib>=3.8
+ipykernel>=6.0
+nbclient>=0.10
+nbformat>=5.9

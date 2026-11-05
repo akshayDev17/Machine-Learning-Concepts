@@ -5,7 +5,8 @@
 > [`kmeans_from_scratch.ipynb`](kmeans_from_scratch.ipynb) (the same algorithm in NumPy). Distance, scaling and the
 > scores used to judge clusters are in [clustering in practice](../05-in-practice/README.md).
 > Running a fitted model in production (monitoring, retrain decisions, the retrain playbook) is in
-> [`kmeans_in_production.ipynb`](kmeans_in_production.ipynb).
+> [`kmeans_in_production.ipynb`](kmeans_in_production.ipynb); its code lives in [`kmeans_production.py`](kmeans_production.py),
+> a module you can import elsewhere.
 
 **Family:** centroid. Each cluster is a centre; every point belongs to the nearest one. Finds round clusters; you give k.
 

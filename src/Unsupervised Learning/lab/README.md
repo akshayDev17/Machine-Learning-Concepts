@@ -11,6 +11,7 @@ checked against the library). Each notebook stands alone and runs in a few secon
 | Folder | Theory | Library lab | From scratch | Labs |
 |---|---|---|---|---|
 | [`01-kmeans/`](01-kmeans/) | [README](01-kmeans/README.md) | [`kmeans_lab.ipynb`](01-kmeans/kmeans_lab.ipynb) | [`kmeans_from_scratch.ipynb`](01-kmeans/kmeans_from_scratch.ipynb): Lloyd's algorithm, k-means++, the exact 3-pair toy, silhouette and elbow | 1–4 |
+| ↳ in production | [`kmeans_in_production.ipynb`](01-kmeans/kmeans_in_production.ipynb) (parts 1–4: the write-up) | part 5: eleven monitoring / retraining scenarios on a synthetic shop | [`kmeans_production.py`](01-kmeans/kmeans_production.py): the playbook as an importable module (numpy, scipy, scikit-learn) | — |
 | [`02-hierarchical/`](02-hierarchical/) | [README](02-hierarchical/README.md) | [`hierarchical_lab.ipynb`](02-hierarchical/hierarchical_lab.ipynb) | [`hierarchical_from_scratch.ipynb`](02-hierarchical/hierarchical_from_scratch.ipynb): agglomerative clustering with the Lance–Williams update | 5–6 |
 | [`03-dbscan/`](03-dbscan/) | [README](03-dbscan/README.md) | [`dbscan_lab.ipynb`](03-dbscan/dbscan_lab.ipynb) | [`dbscan_from_scratch.ipynb`](03-dbscan/dbscan_from_scratch.ipynb): DBSCAN, breadth-first | 7–8 |
 | [`04-optics-hdbscan/`](04-optics-hdbscan/) | [README](04-optics-hdbscan/README.md) | [`optics_hdbscan_lab.ipynb`](04-optics-hdbscan/optics_hdbscan_lab.ipynb) | [`optics_from_scratch.ipynb`](04-optics-hdbscan/optics_from_scratch.ipynb): OPTICS and cutting it at an eps | 9 |
@@ -21,7 +22,8 @@ notebooks are already executed: you can read every result on GitHub without inst
 1–12 across the folders, so the README's "Lab N" references still point to one place.
 
 There are no data files: all data is generated in the notebooks or ships with scikit-learn (iris, wine, digits), so no
-internet is needed. All results (printed numbers and plots) appear directly **under the code cell that produced them**.
+internet is needed. The one `.py` file, `01-kmeans/kmeans_production.py`, is imported by `kmeans_in_production.ipynb`
+(run that notebook from its own folder) and can be copied into any other project. All results (printed numbers and plots) appear directly **under the code cell that produced them**.
 
 ## How to run it
 
@@ -50,7 +52,7 @@ Then, in **VS Code** (with the Python and Jupyter extensions installed):
    listed (it was registered when this lab was built), or **Python Environments** → the `.venv` you just created.
 3. Run cells one by one with **Shift + Enter**, or everything with **Run All**. Measured kernel time per notebook:
    2–4 seconds each, except `kmeans_from_scratch.ipynb` at about 7 (its exact k-means++ enumeration and a
-   100,000-draw check).
+   100,000-draw check) and `kmeans_in_production.ipynb` at about a minute (eleven scenarios, each with its k-scan).
 
 * **Always run the first code cell (imports and helpers) first.** After that, run top to bottom; later cells reuse
   functions and data from earlier ones.
