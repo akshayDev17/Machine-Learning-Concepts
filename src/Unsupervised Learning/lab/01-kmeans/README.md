@@ -4,6 +4,8 @@
 > Labs in this folder: [`kmeans_lab.ipynb`](kmeans_lab.ipynb) (Labs 1–4, scikit-learn) and
 > [`kmeans_from_scratch.ipynb`](kmeans_from_scratch.ipynb) (the same algorithm in NumPy). Distance, scaling and the
 > scores used to judge clusters are in [clustering in practice](../05-in-practice/README.md).
+> Running a fitted model in production (monitoring, retrain decisions, the retrain playbook) is in
+> [`kmeans_in_production.ipynb`](kmeans_in_production.ipynb).
 
 **Family:** centroid. Each cluster is a centre; every point belongs to the nearest one. Finds round clusters; you give k.
 
