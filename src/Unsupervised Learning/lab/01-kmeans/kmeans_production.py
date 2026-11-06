@@ -385,7 +385,9 @@ def previous_model_fits(mv: ModelVersion, X_batch):
 def decide_on_alarm(mv: ModelVersion, X_latest, breach_map, min_share=0.01):
     """The decision step, in the order the notebook gives: data checks, rollback, then the trigger table.
 
-    Returns {'action': 'fix the data' | 'roll back' | 'keep + rebaseline' | 'log only' | 'retrain', ...details}.
+    Returns {'action': 'fix the data' | 'roll back' | 'keep + rebaseline' | 'watch' | 'log only' | 'retrain', ...}.
+    Per-segment signal 1 is a watch signal like signal 3: it names a segment and a feature; signals 2 and 4 decide
+    retraining.
     """
     out = {"trigger": classify_trigger(breach_map), "issues": data_checks(X_latest, mv)}
     if out["issues"]:
@@ -411,15 +413,19 @@ def decide_on_alarm(mv: ModelVersion, X_latest, breach_map, min_share=0.01):
         out["action"] = "log only"
         out["why"] = "a feature moved but the fit did not (signals 2 and 4 inside their bands); watch it"
         return out
-    if t == "tighter" and "s1seg" not in breach_map:
+    if t == "segment_shape" or (t == "tighter" and "s1seg" in breach_map):
+        out["action"] = "watch"
+        out["why"] = ("a feature's distribution changed inside one segment while the fit held (signals 2 and 4 inside "
+                      "their bands): profile the segment, keep watching, re-draw its reference rows once the change is "
+                      "accepted; signals 2 and 4 decide any refit")
+        return out
+    if t == "tighter":
         out["action"] = "log only"
         out["why"] = "points sit tighter than usual, inputs pass the checks, no segment changed shape"
         return out
     out["action"] = "retrain"
     out["why"] = {"new_group": "far points above the band: a group the model has no centroid for",
-                  "fit_worse": "the fit got worse: centroids moved or a group appeared",
-                  "segment_shape": "a feature's distribution changed inside one segment",
-                  "tighter": "points sit tighter and a segment changed shape: a possible split"}[t]
+                  "fit_worse": "the fit got worse: centroids moved or a group appeared"}[t]
     return out
 
 
@@ -751,7 +757,7 @@ def method_review(Z, k, sample=3000, n_pairs=5, min_cluster_size=None, rng=None)
 
 
 def carry_names(mv_old: ModelVersion, mv_new: ModelVersion, far_share=None, far_floor=0.5):
-    """Step 7: match new centroids to old ones (old model's space); split segments get 'name · a/b', merges 'A + B'.
+    """Step 8: match new centroids to old ones (old model's space); split segments get 'name · a/b', merges 'A + B'.
 
     A new cluster made mostly of the old model's far points (far_share >= far_floor) is a new segment, not a split.
     """
