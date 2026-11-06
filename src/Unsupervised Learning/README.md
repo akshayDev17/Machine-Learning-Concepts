@@ -14,7 +14,8 @@
 3. [Choosing a method: the flowchart](#3-choosing-a-method-the-flowchart)
 4. [The labs](#4-the-labs)
 5. [Further reading](#5-further-reading)
-6. [Appendix - Assumptions made](#appendix---assumptions-made)
+6. [Not yet covered](#6-not-yet-covered)
+7. [Appendix - Assumptions made](#appendix---assumptions-made)
 
 ---
 
@@ -201,8 +202,8 @@ flowchart TD
 | OPTICS | exploring every density level | slow; xi is a setting too | Lab 9 |
 | HDBSCAN | mixed densities, unknown eps | many features: distances stop meaning anything and points turn to noise | Lab 9 |
 
-Not covered here: Gaussian mixture models (cluster probabilities, elliptical clusters) and spectral clustering (graph
-data, non-convex shapes).
+Not covered here: Gaussian mixtures, Birch, mean shift, affinity propagation and spectral clustering
+([§6](#6-not-yet-covered)).
 
 ## 4. The labs
 
@@ -216,6 +217,10 @@ Setup, run instructions and a map of which lab answers which question are in **[
 | [`lab/04-optics-hdbscan/`](lab/04-optics-hdbscan/) | [README](lab/04-optics-hdbscan/README.md) | [Lab 9](lab/04-optics-hdbscan/optics_hdbscan_lab.ipynb): reachability plot, xi, HDBSCAN | [OPTICS and its eps cuts](lab/04-optics-hdbscan/optics_from_scratch.ipynb) |
 | [`lab/05-in-practice/`](lab/05-in-practice/) | [README](lab/05-in-practice/README.md) | [Labs 10–12](lab/05-in-practice/in_practice_lab.ipynb): scaling, scores without labels, real data, summary, guide | — (no new algorithm) |
 
+Running k-means in production (monitoring, retrain decisions, the retrain playbook) is in
+[`kmeans_in_production.ipynb`](lab/01-kmeans/kmeans_in_production.ipynb); defining its very first training window is in
+[`first_go_live_scenarios.md`](lab/01-kmeans/first_go_live_scenarios.md).
+
 The original notebooks this folder grew from are kept in [`_archive/`](_archive/).
 
 ## 5. Further reading
@@ -225,6 +230,21 @@ The original notebooks this folder grew from are kept in [`_archive/`](_archive/
   (the six shapes of Lab 4).
 * Hastie, Tibshirani & Friedman, *The Elements of Statistical Learning*, §14.3 (cluster analysis).
 * Papers for each method are listed at the end of its folder's README.
+
+## 6. Not yet covered
+
+To visit after DBSCAN, HDBSCAN, agglomerative and OPTICS. All of them are in scikit-learn 1.9.1.
+
+| Method | A cluster is | `predict` for a new point? | Why visit it |
+|---|---|---|---|
+| Gaussian mixture (`GaussianMixture`, `BayesianGaussianMixture`) | a Gaussian: a mean and a covariance; points go to the most probable one | yes, plus `predict_proba` for soft memberships | stretched, tilted clusters of different sizes; the closest challenger to k-means among the methods that can predict |
+| Birch | many small subclusters (each kept as a mean), optionally grouped into `n_clusters` | yes: the nearest subcluster's centroid | one pass over the data and `partial_fit` in chunks, so built for big data; a cluster made of many subclusters can bend |
+| Mean shift | the points nearest a density peak (mode); `bandwidth` sets the scale | yes: the nearest mode | finds the number of clusters itself; slow on large n (`bin_seeding` helps) |
+| Affinity propagation | the points nearest an exemplar, a real data point chosen by message passing; `preference` sets roughly how many | yes: the nearest exemplar; every point gets −1 if the fit didn't converge | finds the number of clusters itself; its n × n similarity matrix limits it to a few thousand rows |
+| Spectral clustering | a group in a similarity graph | no, only `fit_predict` | graph data and non-convex shapes |
+
+* Mean shift and affinity propagation assign each point to its nearest representative, as k-means does, so their
+  borders are straight and they fail on the same curved shapes; what they add is choosing k themselves.
 
 ## Appendix - Assumptions made
 

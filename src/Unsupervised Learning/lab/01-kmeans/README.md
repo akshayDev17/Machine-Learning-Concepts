@@ -7,6 +7,8 @@
 > Running a fitted model in production (monitoring, retrain decisions, the retrain playbook) is in
 > [`kmeans_in_production.ipynb`](kmeans_in_production.ipynb); its code lives in [`kmeans_production.py`](kmeans_production.py),
 > a module you can import elsewhere.
+> How to define the very first training window, for a new business and for one with two years of orders, is in
+> [`first_go_live_scenarios.md`](first_go_live_scenarios.md).
 
 **Family:** centroid. Each cluster is a centre; every point belongs to the nearest one. Finds round clusters; you give k.
 
