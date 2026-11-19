@@ -28,6 +28,9 @@ audit file was not edited.
 | 11 | `gradientBoostingClassifier_demo2.png` | 1.0 MB | – | Hand-annotated prediction path through F₀ + two trees → −0.59 → probability | Used by file 5 |
 | – | `../elephant-ensemble.png` (lives in `src/`) | 0.2 KB | – | “Blind men and the elephant” analogy | Linked from file 2 with a wrong relative path |
 
+This table records the folder **as it was at the time of the audit**. Files 1–9 have since been deleted (section 4,
+"What happened to the originals"); files 10–11 were moved into `05-gradient-boosting/images/`.
+
 ### Techniques covered (the list the rewrite is organised around)
 
 1. **Voting** (hard, soft, weighted; mean/median for regression) — files 1, 2. *Stacking* is not in the old
@@ -234,12 +237,12 @@ Kept: all of it, including the histogram worked example (now with the gain actua
   strong: a few hundred shallow trees predict in microseconds, and TreeSHAP / permutation importance explain them.
 - **Missing [audit]:** there is no Advantages section. Added.
 
-### 2.9 `ABTesting.ipynb` — **Out of scope, left in place**
+### 2.9 `ABTesting.ipynb` — **Out of scope, later removed**
 
-A three-bullet stub about experiment design; it has nothing to do with ensembles **[audit]**. The task's constraints
-allow touching only this folder, so it was **not moved or edited**. Recommendation: move it next to the statistics /
-hypothesis-testing notes and port the content listed in the audit (primary metric + guardrails, MDE/power before
-launch, no peeking, novelty burn-in, Simpson's-paradox check).
+A three-bullet stub about experiment design; it has nothing to do with ensembles **[audit]**. The rewrite left it
+untouched, because its right home is outside this folder; it was later deleted together with the old notebooks and
+survives only in the git history. If A/B testing notes are written, the audit's list is a starting point: primary
+metric + guardrails, MDE/power before launch, no peeking, novelty burn-in, Simpson's-paradox check.
 
 ### 2.10 Images
 
@@ -286,14 +289,14 @@ choosing a technique, advantages and disadvantages).
 src/Ensemble Learning/
 ├── README.md                      ← start here: foundations, map, chooser, pros & cons
 ├── EVALUATION.md                  ← this file
+├── images/                        ← the figures on README.md
+├── 00-ensemble-learning/          ← notebook behind README.md's bias–variance figure (added after the rewrite)
 ├── 01-voting/            README.md, images/, lab/
 ├── 02-bagging/           README.md, images/, lab/
 ├── 03-random-forest/     README.md, images/, lab/
 ├── 04-adaboost/          README.md, images/, lab/
 ├── 05-gradient-boosting/ README.md, images/, lab/
-├── 06-xgboost/           README.md, images/, lab/
-├── ABTesting.ipynb                ← untouched (out of scope, see 2.9)
-└── _archive/                      ← the superseded originals, kept for review
+└── 06-xgboost/           README.md, images/, lab/
 ```
 
 Every `lab/` folder has the same shape:
@@ -306,28 +309,30 @@ Every `lab/` folder has the same shape:
 | `README.md` | the lab guide (PCA lab-README format) |
 | `requirements.txt` | `ipykernel`-based, no `jupyterlab` |
 
-### Why `_archive/` instead of deleting
+### What happened to the originals
 
-`Bagging.ipynb` and `XGBoost.ipynb` hold **uncommitted** edits. Deleting them would destroy those edits, so all
-superseded originals were moved (not deleted) into `_archive/`. Their content is fully absorbed into the new files;
-`_archive/` can be deleted once reviewed. Nothing was committed.
+During the rewrite all superseded originals were moved into an `_archive/` folder rather than deleted, because
+`Bagging.ipynb` and `XGBoost.ipynb` held uncommitted edits. After review, `_archive/` was deleted on purpose and the
+rewrite was committed in `2f8c3b0`. The originals can be recovered from the commit before it (`80b823d`), in their
+last **committed** form: the uncommitted edits in `Bagging.ipynb` and `XGBoost.ipynb` were never committed, so only
+their content survives, absorbed into `02-bagging/` and `06-xgboost/`.
 
 ### Old path → new path
 
 | Old path | New path | What happened |
 |---|---|---|
-| `Ensemble Learning.ipynb` | `_archive/Ensemble Learning.ipynb` | content split into `README.md`, `04-adaboost/README.md`, `05-gradient-boosting/README.md`, `06-xgboost/README.md` |
-| `Intro to Ensembles - Voting.ipynb` | `_archive/Intro to Ensembles - Voting.ipynb` | rewritten as `01-voting/` |
-| `Bagging.ipynb` (uncommitted edits) | `_archive/Bagging.ipynb` | rewritten as `02-bagging/` |
-| `RandomForest.ipynb` | `_archive/RandomForest.ipynb` | rewritten as `03-random-forest/` |
-| `GradientBoosting.ipynb` | `_archive/GradientBoosting.ipynb` | rewritten as `05-gradient-boosting/` |
-| `gradient_boosting_classification.ipynb` | `_archive/gradient_boosting_classification.ipynb` | superseded by `05-gradient-boosting/lab/gradient_boosting_from_scratch.ipynb` |
-| `XGBoost.ipynb` (uncommitted edits) | `_archive/XGBoost.ipynb` | rewritten as `06-xgboost/` |
-| `Advantages and Disadvantages of Ensemble Learning.ipynb` | `_archive/Advantages and Disadvantages of Ensemble Learning.ipynb` | rewritten as `README.md` §6 |
+| `Ensemble Learning.ipynb` | deleted (git history) | content split into `README.md`, `04-adaboost/README.md`, `05-gradient-boosting/README.md`, `06-xgboost/README.md` |
+| `Intro to Ensembles - Voting.ipynb` | deleted (git history) | rewritten as `01-voting/` |
+| `Bagging.ipynb` (uncommitted edits) | deleted (git history has the last committed version) | rewritten as `02-bagging/` |
+| `RandomForest.ipynb` | deleted (git history) | rewritten as `03-random-forest/` |
+| `GradientBoosting.ipynb` | deleted (git history) | rewritten as `05-gradient-boosting/` |
+| `gradient_boosting_classification.ipynb` | deleted (git history) | superseded by `05-gradient-boosting/lab/gradient_boosting_from_scratch.ipynb` |
+| `XGBoost.ipynb` (uncommitted edits) | deleted (git history has the last committed version) | rewritten as `06-xgboost/` |
+| `Advantages and Disadvantages of Ensemble Learning.ipynb` | deleted (git history) | rewritten as `README.md` §6 |
 | `gradientBoostingClassifier_demo1.png` | `05-gradient-boosting/images/gradientBoostingClassifier_demo1.png` | moved |
 | `gradientBoostingClassifier_demo2.png` | `05-gradient-boosting/images/gradientBoostingClassifier_demo2.png` | moved |
 | `../elephant-ensemble.png` | `01-voting/images/elephant-ensemble.png` | copied (original left in `src/`) |
-| `ABTesting.ipynb` | `ABTesting.ipynb` | untouched |
+| `ABTesting.ipynb` | deleted (git history) | out of scope (2.9); removed with the old notebooks |
 
 ### Per-technique plan: good-fit and bad-fit datasets
 
@@ -409,9 +414,8 @@ resolve, every theory README ends with `## Appendix - Assumptions made`, and no 
 
 ### 6.4 Not done / left as is
 
-* `ABTesting.ipynb` was not moved (out of scope, see 2.9).
-* `_archive/` still holds the originals (including the user's uncommitted edits in `Bagging.ipynb` and
-  `XGBoost.ipynb`); delete it once reviewed.
+* `ABTesting.ipynb` was not ported anywhere (out of scope, see 2.9); it was deleted with the old notebooks.
+* `_archive/` was deleted after review; the originals are in the git history (section 4).
 * The theory READMEs run 650–800 lines, longer than PCA's 609, because each covers both a library and a
   from-scratch notebook.
-* Nothing was committed.
+* The rewrite was committed in `2f8c3b0`.
