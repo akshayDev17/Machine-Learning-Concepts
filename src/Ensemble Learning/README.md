@@ -18,12 +18,13 @@
 5. [Which technique when — and the reading order](#5-which-technique-when--and-the-reading-order)
 6. [Advantages and disadvantages of ensembles](#6-advantages-and-disadvantages-of-ensembles)
 7. [Common misconceptions](#7-common-misconceptions)
-8. [What is in this folder](#8-what-is-in-this-folder)
-9. [Glossary](#9-glossary)
-10. [Further reading](#10-further-reading)
-11. [Claude Code skills that teach tuning](#11-claude-code-skills-that-teach-tuning)
-12. [Findings to review: non-tree members, and when an ensemble does not help](#12-findings-to-review-non-tree-members-and-when-an-ensemble-does-not-help)
-13. [Appendix - Assumptions made](#appendix---assumptions-made)
+8. [Rough vs refined explanations](#8-rough-vs-refined-explanations)
+9. [What is in this folder](#9-what-is-in-this-folder)
+10. [Glossary](#10-glossary)
+11. [Further reading](#11-further-reading)
+12. [Claude Code skills that teach tuning](#12-claude-code-skills-that-teach-tuning)
+13. [Findings to review: non-tree members, and when an ensemble does not help](#13-findings-to-review-non-tree-members-and-when-an-ensemble-does-not-help)
+14. [Appendix - Assumptions made](#appendix---assumptions-made)
 
 ---
 
@@ -161,8 +162,14 @@ Check: the average squared distance to the truth is $\big((2-3)^2+(4-3)^2+(6-3)^
 are. In the figure in section 1: the stump is a tight cluster in the wrong place, the deep tree is centred but
 scattered, the bagged average is centred and tighter.
 
-**What averaging does to variance.** Average $B$ models, each with variance $\sigma^2$, whose errors have pairwise
-correlation $\rho$:
+**What averaging does to variance.** At a fixed input $x$, average the predictions $\hat f_b(x)$ of $B$ models that
+vary across training sets, and define (variances and covariances taken across training sets; $\sigma^2$ here is not
+the noise above, and $\rho$ is the same for the errors $\hat f_b(x) - f(x)$, since $f(x)$ is fixed):
+
+$$\sigma^2 = \frac{1}{B}\sum_{b=1}^{B}\text{Var}\big(\hat f_b\big) \qquad\qquad \rho = \frac{1}{\sigma^2}\cdot\frac{1}{B(B-1)}\sum_{i=1}^{B}\sum_{\substack{j=1\\ j\neq i}}^{B}\text{Cov}\big(\hat f_i, \hat f_j\big)$$
+
+that is, $\sigma^2$ is the average variance of one member and $\rho$ the average covariance between two different
+members, measured in units of $\sigma^2$. Then, exactly:
 
 $$\text{Var}\Big(\tfrac{1}{B}\sum_{b=1}^{B}\hat f_b\Big) = \rho\,\sigma^2 + \frac{1-\rho}{B}\,\sigma^2$$
 
@@ -170,6 +177,12 @@ $$\text{Var}\Big(\tfrac{1}{B}\sum_{b=1}^{B}\hat f_b\Big) = \rho\,\sigma^2 + \fra
 * Correlated models: as $B$ grows the second term vanishes but the **floor $\rho\sigma^2$ stays**. With
   $\sigma^2 = 4$, $\rho = 0.5$: $B = 10$ gives $2 + 0.2 = 2.2$, and even $B = \infty$ only reaches 2.
 * Averaging does **not** change the bias: the average of many biased models is still biased.
+* **Checked against measurement:** [section 11 of `00-ensemble-learning/bias_variance_trees.ipynb`](00-ensemble-learning/bias_variance_trees.ipynb)
+  prints every tree's variance and every pairwise $\rho$ for random forests of 1 to 7 trees and sums this formula
+  term by term. With $\sigma^2$ and $\rho$ defined as above it equals the measured variance exactly — for any
+  ensemble, since it is the pair-by-pair sum $\frac{1}{B^2}\sum_i\sum_j \text{Cov}(\hat f_i, \hat f_j)$ regrouped. A
+  plain average of the pairwise correlations is close only when the members' variances are similar, as for trees
+  grown by the same random procedure (within 0.1 % there); members of different kinds can be far off.
 
 That one formula explains the averaging family: bagging makes $\frac{1-\rho}{B}$ small, random forests attack the
 floor by lowering $\rho$, and voting works only if the members' errors are not strongly correlated. Boosting is
@@ -266,11 +279,23 @@ The old notes listed only disadvantages; some were overstated. Corrected and com
 
 ---
 
-## 8. What is in this folder
+## 8. Rough vs refined explanations
+
+Common one-line explanations of why ensembles work, each next to a refined version that says what actually cancels,
+what does not, and when the explanation stops being true.
+
+| Rough version (less wrong) | Refined version |
+|---|---|
+| Bagging works because the individual estimators average out each other's *errors*, so the predictions are stable enough. | Bagging works because trees trained on different bootstrap samples make partly different errors. Averaging cancels the part of their errors that differs from tree to tree, which makes the prediction vary less from one training set to another. The part they share — their common bias and the error inherited from the same training data — does not cancel, so the gain stops at a floor and needs unstable members to begin with. |
+| Boosting works because sequential learners learn from the mistakes of their immediate predecessor and rectify them. | Boosting works because each new weak learner is fitted to what the ensemble built so far still gets wrong — the residuals in gradient boosting, the up-weighted misclassified rows in AdaBoost — and a shrunken copy of it is added to the sum, so each round removes a little more of the remaining systematic error (bias). The prediction is the sum of all the learners. It keeps helping only while the leftover error has structure the learner can capture; once what is left is mostly noise, extra rounds fit the noise, so the number of rounds is chosen on validation data (early stopping). |
+
+---
+
+## 9. What is in this folder
 
 | Path | What |
 |---|---|
-| [`00-ensemble-learning/`](00-ensemble-learning/bias_variance_trees.ipynb) | Notebook behind section 1's figure: bias and variance of a stump, a deep tree and bagging, and how all three go flat past the training range |
+| [`00-ensemble-learning/`](00-ensemble-learning/) | Two notebooks: [`bias_variance_trees.ipynb`](00-ensemble-learning/bias_variance_trees.ipynb) makes section 1's figure (bias and variance of a stump, a deep tree and bagging, and how all three go flat past the training range); [`extrapolation_lab.ipynb`](00-ensemble-learning/extrapolation_lab.ipynb) is section 13.1's lab (tree and non-tree members, boosted and bagged, past the training range) |
 | [`01-voting/`](01-voting/README.md) | Voting: hard, soft, weighted; mean/median for regression; stacking as the fix for its main failure |
 | [`02-bagging/`](02-bagging/README.md) | Bagging, pasting, out-of-bag evaluation, random subspaces and patches |
 | [`03-random-forest/`](03-random-forest/README.md) | Random forests, feature importances (MDI vs permutation) |
@@ -290,7 +315,7 @@ can read them on GitHub without running anything.
 
 ---
 
-## 9. Glossary
+## 10. Glossary
 
 | Term | Meaning |
 |---|---|
@@ -312,7 +337,7 @@ can read them on GitHub without running anything.
 
 ---
 
-## 10. Further reading
+## 11. Further reading
 
 * James, Witten, Hastie, Tibshirani, *An Introduction to Statistical Learning* (2nd ed.), chapter 8 — trees,
   bagging, random forests, boosting, gently (the repo's ISLR notes are in [`../islr_notes`](../islr_notes)).
@@ -324,7 +349,7 @@ can read them on GitHub without running anything.
 
 ---
 
-## 11. Claude Code skills that teach tuning
+## 12. Claude Code skills that teach tuning
 
 Disadvantage 3 above says choosing and tuning members "is a skill". The technique READMEs explain every knob but
 not the procedure (what to tune first, which symptom means which knob, how to spend a search budget, which members
@@ -363,23 +388,26 @@ of vector-agentic-skills; scripts read before installing, not executed).
 
 ---
 
-## 12. Findings to review: non-tree members, and when an ensemble does not help
+## 13. Findings to review: non-tree members, and when an ensemble does not help
 
-> **Status: for review.** These results come from one-off experiments run on 2026-11-19 (Python 3.13.3,
-> scikit-learn 1.9.1, xgboost 3.4.1, lightgbm 4.7.0). The code is not in the repository yet.
+> **Status: for review.** These results come from experiments run on 2026-11-19 (Python 3.13.3, scikit-learn
+> 1.9.1, xgboost 3.4.1, lightgbm 4.7.0). §13.1's code is
+> [`00-ensemble-learning/extrapolation_lab.ipynb`](00-ensemble-learning/extrapolation_lab.ipynb); §13.2's is not in
+> the repository yet. What published research says about ensembles of non-tree members is collected in
+> [`00-ensemble-learning/non_tree_ensembles_literature.md`](00-ensemble-learning/non_tree_ensembles_literature.md).
 
-### 12.1 Extrapolation with members that are not trees (disadvantage 4)
+### 13.1 Extrapolation with members that are not trees (disadvantage 4)
 
 **Question.** [Disadvantage 4](#disadvantage-4) says tree ensembles cannot extrapolate. Is that a property of trees, or of
 ensembles? What if every member — the base learner in bagging, every sequential learner in boosting — is a
 different kind of model, for example a small neural network?
 
-**Setup.** 300 points from $y = 2x + 3\sin(x)$ plus Gaussian noise (σ = 1), trained on $x \in [0, 10]$, tested on
+**Setup — first curve.** 300 points from $y = 2x + 3\sin(x)$ plus Gaussian noise (σ = 1), trained on $x \in [0, 10]$, tested on
 $x \in [10, 15]$. The true value is 18.4 at $x = 10.5$ and 32.0 at $x = 15$. Boosting is a hand-written
 squared-loss gradient-boosting loop that accepts any regressor (100 rounds, learning rate 0.1); bagging is
 `BaggingRegressor` with 50 members.
 
-**Tree ensembles, for reference** (prediction at $x = 15$; test RMSE on $[10, 15]$):
+**Tree ensembles on the first curve, for reference** (prediction at $x = 15$; test RMSE on $[10, 15]$):
 
 | Model | At $x = 15$ | RMSE |
 |---|---|---|
@@ -392,18 +420,22 @@ squared-loss gradient-boosting loop that accepts any regressor (100 rounds, lear
 Depth changes nothing: every tree is constant beyond its last split, so any sum or average of trees is too. The
 linear-leaf LightGBM went *down*, because the last leaf continued the local downward slope of the sine wave.
 
-**Non-tree members, boosted and bagged:**
+**Non-tree members on the first curve — alone, boosted and bagged:**
 
-| Member | What it does past the edge | Boosted: at 10.5 / at 15 / RMSE | Bagged: at 10.5 / at 15 / RMSE |
-|---|---|---|---|
-| Linear regression | continues one global straight line | 21.3 / 30.2 / **2.4** | 21.3 / 30.2 / **2.4** |
-| Neural net, ReLU, 16 units | continues its last straight piece | 21.1 / 26.7 / 3.6 | 20.5 / 28.4 / 2.8 |
-| Neural net, tanh, 16 units | levels off once its units saturate | 21.8 / 25.5 / 4.1 | 13.3 / 13.4 / 12.6 |
-| Cubic polynomial | shoots off; direction set by the top coefficient | 20.6 / **9.7** / 10.8 | 22.6 / **32.3** / 3.0 |
-| Spline, continued as a straight line | continues the slope at the edge | 17.0 / 8.3 / 14.2 | 16.4 / 5.8 / 15.8 |
-| Spline, held constant | flat | 18.0 / 18.0 / 8.6 | 17.6 / 17.6 / 8.9 |
-| k-nearest neighbours, k = 10 | flat (repeats the nearest edge points) | 18.0 / 18.0 / 8.6 | 18.4 / 18.4 / 8.3 |
-| Support vector regression, RBF kernel | falls back to its intercept far from the data | 17.4 / 7.7 / 15.2 | 17.2 / 9.5 / 14.0 |
+| Member | What it does past the edge | Alone: at 15 / unexplained by one member | Boosted: at 10.5 / at 15 / RMSE | Bagged: at 10.5 / at 15 / RMSE |
+|---|---|---|---|---|
+| Linear regression | continues one global straight line | 30.2 / 12.0 % | 21.3 / 30.2 / **2.4** | 21.3 / 30.2 / **2.4** |
+| Neural net, ReLU, 16 units | continues its last straight piece | 29.3 / 12.1 % | 21.1 / 26.7 / 3.6 | 20.5 / 28.4 / 2.8 |
+| Neural net, tanh, 16 units | levels off once its units saturate | 13.8 / 39.3 % | 21.8 / 25.5 / 4.1 | 13.3 / 13.4 / 12.6 |
+| Cubic polynomial | shoots off; direction set by the top coefficient | 32.2 / 10.0 % | 20.6 / **9.7** / 10.8 | 22.6 / **32.3** / 3.0 |
+| Spline, continued as a straight line | continues the slope at the edge | 5.7 / 2.8 % | 17.0 / 8.3 / 14.2 | 16.4 / 5.8 / 15.8 |
+| Spline, held constant | flat | 17.6 / 2.8 % | 18.0 / 18.0 / 8.6 | 17.6 / 17.6 / 8.9 |
+| k-nearest neighbours, k = 10 | flat (repeats the nearest edge points) | 18.4 / 2.2 % | 18.0 / 18.0 / 8.6 | 18.4 / 18.4 / 8.3 |
+| Support vector regression, RBF kernel | falls back to its intercept far from the data | 9.4 / 2.4 % | 17.4 / 7.7 / 15.2 | 17.2 / 9.5 / 14.0 |
+
+*Unexplained by one member* is $1 - R^2$ of one member, fitted once on its own, on the training data: how far the
+training targets still spread around its predictions, as a share of how far they spread around their average.
+Pure noise is 2.6 % of that spread, so a member near 2.6 % leaves nothing but noise for later boosting rounds.
 
 **Are the neural nets reliable?** Prediction at $x = 15$ (truth 32.0) for five random seeds; bagging with 20
 nets, boosting with 30 rounds at learning rate 0.3:
@@ -417,14 +449,32 @@ nets, boosting with 30 rounds at learning rate 0.3:
 | tanh net, bagged | 17.2 17.6 17.3 16.9 16.7 | 0.9 |
 | tanh net, boosted | 23.5 23.6 24.2 25.1 23.8 | 1.6 |
 
+**Second curve — one that keeps returning to zero** (lab part D). The same experiment on $y = 3\sin x$: no trend,
+three zero crossings inside the training range and one in the test range; same noise, training points, ranges and
+settings. Truth at $x = 15$ is 2.0, and pure noise is now 21.3 % of the training targets' spread.
+
+| Model | At $x = 15$ | Test RMSE | RMSE inside |
+|---|---|---|---|
+| Predicting 0 everywhere (baseline) | 0.0 | **2.31** | — |
+| Random forest / xgboost, depth 6 | −1.8 / −1.4 | 2.88 / 2.70 | 0.66 / 0.95 |
+| Linear regression (alone = boosted = bagged) | 0.2 | 2.37 | 1.99 |
+| ReLU nets, bagged | 0.8 | 2.36 | 1.96 |
+| ReLU nets, boosted | −2.0 | 3.07 | 0.98 |
+| Cubic, boosted (ridge penalty undone) | **−20.0** | 10.68 | 1.74 |
+| k-NN, boosted | −1.9 | 2.99 | 1.86 |
+| Spline (straight ends) / SVR, alone | −8.9 / −1.5 | 6.67 / 3.27 | 0.28 / 0.15 |
+| Linear regression on $\sin x$, $\cos x$ (given the true form) | 1.9 | **0.09** | 0.07 |
+
 **What this shows**
 
 * **Extrapolation is a property of the members, not of the ensemble.** Boosting adds the members' predictions and
   bagging averages them, so past the training range the ensemble does whatever its members do there. Flat members
   give a flat ensemble; members that continue the edge slope give an ensemble that continues the edge slope.
-* **Bagging small ReLU networks extrapolates, and reliably.** Each net continues in a straight line; averaging
-  keeps that and makes it steadier (spread 0.5 across seeds). Averaging separately trained networks is common
-  practice, often called a *deep ensemble*.
+* **Bagged small ReLU networks are consistent, not good.** Five seeds agree (spread 0.5), but the bagged nets are
+  nearly straight lines: inside the training range they fit no better than one linear regression (RMSE against the
+  true pattern 2.06 vs 1.99). That suits a rising curve and fails on one that returns to zero (second curve: 2.36,
+  no better than predicting 0). Boosted ReLU nets do follow the wave inside (0.97). Averaging separately trained
+  networks is common practice, often called a *deep ensemble*.
 * **Boosting small ReLU networks extrapolates, but unreliably** (spread 9.5 across seeds). After the first rounds
   each net fits leftover error that is mostly noise, and those nets' slopes past the edge add up unpredictably.
   Boosting is designed for weak members; a network is already strong, which is one reason networks are rarely
@@ -432,18 +482,41 @@ nets, boosting with 30 rounds at learning rate 0.3:
 * **tanh networks go flat like trees,** because every tanh unit levels off far from the data.
 * **Continuing the edge slope is not the same as continuing the trend.** It worked for the ReLU nets here because
   the true trend is a straight line, but the spline that continued its edge slope went downhill while the truth
-  went up, and the cubic polynomial's boosted and bagged versions disagreed by 22.6 on the same data.
-* **The reliable fix is to choose the shape on purpose:** model the trend explicitly (a linear or domain model) and
-  let the ensemble fit what is left inside the training range — `init=LinearRegression()` or xgboost's
-  `base_margin` above, or "trees on detrended targets" in section 5's table.
+  went up, and a cubic's prediction at $x = 15$ moved from 32.2 to 9.7 just because boosting removed its small
+  ridge penalty (the 22.6 gap between the boosted and bagged cubic above).
+* **Most non-tree members left boosting nothing to do** — the two traps of 13.2. Linear models, cubics and splines
+  add up to one member of their own kind, so boosting ends at that kind's best fit (undoing any ridge penalty);
+  splines, k-NN and SVR already leave only 2.2–2.8 % unexplained by one member (table column above), about the
+  2.6 % that is pure noise, so later rounds fit noise (boosted k-NN gets worse inside: 0.30 → 1.86). Only the
+  neural nets left real error (12.1 % and 39.3 %), and only there did boosting improve the fit (2.00 → 0.97,
+  3.58 → 1.19). So the table above mostly compares kinds of member, which is why the first bullet holds.
+* **xgboost's `gblinear` is plain linear regression.** With no penalty it equals `LinearRegression`;
+  `reg_lambda=λ` equals `Ridge(alpha=λ·n)` (xgboost scales its L2 penalty by the number of rows *n*) and
+  `reg_alpha=α` equals `Lasso(alpha=α)` — largest gap 6.3e-06, float32 rounding. Boosting a linear model with
+  our loop gives the same linear model, except that boosting **undoes ridge's penalty** (slope 1.770 → 1.970,
+  the unpenalized slope) while it **keeps lasso's** (1.855 vs 1.857); bagging changes neither (lab, parts A and B
+  continued).
+* **Only a model whose shape matches the truth extrapolates** (second-curve table). On $y = 3\sin x$ no generic
+  model — boosted, bagged or alone — beats predicting 0 past the edge (2.31). The linear models score 2.37,
+  *exactly* their error on the first curve, because a straight line fitted to $2x + 3\sin x$ is $2x$ plus the
+  line it would fit to the wave alone: on the first curve they got the trend for free. The model given the true
+  form ($\sin x$, $\cos x$) reaches 0.09. Both boosting traps reappear unchanged (the boosted cubic swings to
+  −20.0; boosted k-NN again fits worse inside, 0.29 → 1.86).
+* **A good fit inside the range says nothing about outside it.** On the first curve SVR and the splines fit the
+  training range almost perfectly (RMSE against the true pattern 0.16–0.47) and were among the worst outside it
+  (test RMSE 14–16); on the second curve they fit 0.15–0.28 inside and 3.27–6.67 outside — worse than predicting 0.
+* **The only fix is to put the right shape in on purpose** — a trend (`init=LinearRegression()` or xgboost's
+  `base_margin` above, or "trees on detrended targets" in section 5's table), a seasonality (sine/cosine
+  features), or another known form — and let the ensemble fit what is left inside the training range. Without
+  knowing the shape, no model in these experiments extrapolated.
 * **Wording of disadvantage 4.** "Predictions stay within the range of training targets" is true for bagging and
   random forests, which average leaf values. Boosting *adds* leaf values and can overshoot the training targets.
   What holds for every tree ensemble is that predictions go **flat beyond the edge of the training inputs**.
 
-### 12.2 "An ensemble is not automatically better" applies beyond voting (disadvantage 6)
+### 13.2 "An ensemble is not automatically better" applies beyond voting (disadvantage 6)
 
 Disadvantage 6 cites only `01-voting/`. The same failure appears in bagging and, in a different form, in
-boosting. Test MSE inside the training range, same data as 12.1:
+boosting. Test MSE inside the training range, same data as 13.1:
 
 | Members | Best member | Average of the members' errors | Error of the averaged model |
 |---|---|---|---|
@@ -451,8 +524,10 @@ boosting. Test MSE inside the training range, same data as 12.1:
 | Bagged linear regression (near-identical copies) | 3.97 | 4.00 | **3.97** — no gain |
 | 1 good member + 2 bad members (averaged) | **0.36** | 16.89 | **6.84** |
 
-* **Copies gain nothing in bagging either.** A stable model gives nearly the same fit on every bootstrap sample, so
-  averaging has nothing to cancel (3.97 vs 3.97; also `02-bagging/` §8.1: 0.8452 vs 0.8455).
+* **Copies gain nothing in bagging either — at this sample size.** A stable model gives nearly the same fit on
+  every bootstrap sample, so averaging has nothing to cancel (3.97 vs 3.97 with one feature and 300 rows; also
+  `02-bagging/` §8.1: 0.8452 vs 0.8455). With few rows per feature even a linear model varies between bootstrap
+  samples, and bagging it can help ([literature note](00-ensemble-learning/non_tree_ensembles_literature.md)).
 * **Members worse than chance hurt bagged classifiers** just as they hurt voting: bagging classifies by majority
   vote, and with members right 45 % of the time a majority of 101 is right only 15.6 % of the time
   (`01-voting/` §8.2).
@@ -461,10 +536,12 @@ boosting. Test MSE inside the training range, same data as 12.1:
   (6.84 vs 0.36). In bagging every member uses the same algorithm, so one bad member among good ones is rare; the
   realistic risk is copies.
 * **Boosting has its own version.** Members worse than chance give AdaBoost nothing to build on — on XOR it cannot
-  even start (`04-adaboost/` §8.4). A member that is too strong ends boosting after one round (`04-adaboost/` §8.3).
-  Gradient boosting avoids copies by design, because each member is fitted to the current leftover error, but it
-  gains nothing if the member type cannot capture that error: boosting linear models gave exactly one linear model
-  (30.2 = 30.2 in 12.1).
+  even start (`04-adaboost/` §8.4). A member that is too strong ends AdaBoost after one round (`04-adaboost/` §8.3).
+  Gradient boosting does not stop: with a member that already explains everything but the noise, it fits the noise
+  and can get worse (boosted k-NN: 0.30 → 1.86 inside on the first curve, 0.29 → 1.86 on the second; lab parts B
+  and D). It avoids copies by design, because each member is fitted to the current leftover error, but it gains
+  nothing if the member type cannot capture that error: boosting linear models gave exactly one linear model
+  (30.2 = 30.2 in 13.1).
 
 **Suggested wording for disadvantage 6:** "…the combination gains nothing or gets worse (voting: `01-voting/`
 §8.2–8.3; bagging a stable model: `02-bagging/` §8.1; boosting too weak or too strong a member: `04-adaboost/`
