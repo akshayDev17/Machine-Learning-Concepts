@@ -7,7 +7,7 @@ there is shown here with code, numbers and plots.
 
 | File | What it is |
 |---|---|
-| [`pca_lab.ipynb`](pca_lab.ipynb) | **The lab.** One Jupyter notebook, 17 labs in 4 parts, plus a closing guide on which models PCA helps. Already executed: you can read every result on GitHub without installing anything. |
+| [`pca_lab.ipynb`](pca_lab.ipynb) | **The lab.** One Jupyter notebook: an opening Lab 0 on why PCA is needed, then 17 labs in 4 parts, plus a closing guide on which models PCA helps. Already executed: you can read every result on GitHub without installing anything. |
 | [`requirements.txt`](requirements.txt) | The Python packages the notebook needs. |
 | `README.md` | This guide. |
 
@@ -36,7 +36,7 @@ Then, in **VS Code** (with the Python and Jupyter extensions installed):
 
 1. Open `src/PCA/lab/pca_lab.ipynb`.
 2. Click **Select Kernel** (top right) → **Python Environments** → the `.venv` you just created.
-3. Run cells one by one with **Shift + Enter**, or everything with **Run All** (about 10 seconds in total).
+3. Run cells one by one with **Shift + Enter**, or everything with **Run All** (under a minute in total).
 
 * **Always run the first code cell (imports) first.** After that, labs can be run in order; a lab only reuses
   variables from earlier labs, so top-to-bottom always works.
@@ -60,6 +60,7 @@ The notebook ends with a **Summary** table listing every lab and what it showed.
 
 | Lab | Question | README section | What to look at |
 |---|---|---|---|
+| 0 | Why reduce dimensions at all? | 7 | new-row R² collapsing to −11.8 as columns approach rows, vs 0.88 on 3 PCs; distance histograms narrowing; k-NN 0.78 vs 0.94 with noise columns |
 | **Part A — How PCA works** | | | |
 | 1 | Does the hand-worked example really give λ = 4 and 1? | 5 | printed matrix / eigenvalues; the before/after scatter |
 | 2 | What *is* an eigenvector? | 2.6 | circle → ellipse plot; “turn” curve crossing zero |

@@ -391,7 +391,9 @@ ways. When that belief holds, PCA helps ML in several concrete ways:
 
 1. **Curse of dimensionality.** With many features, data becomes sparse: points are far from each other, distances
    become less meaningful, and models need far more samples. Fewer dimensions → distance-based methods (k-NN,
-   k-means, SVM with RBF kernel) and density estimates work better.
+   k-means, SVM with RBF kernel) and density estimates work better. In linear and logistic regression, too many
+   columns for the rows means fitting noise: Lab 0 shows the R² on new rows collapsing as columns approach rows,
+   while the same model on 3 PCs holds steady.
 2. **Multicollinearity.** In linear/logistic regression, strongly correlated inputs make coefficients unstable (a
    tiny data change can swing them wildly). PCs are uncorrelated by construction, so regression on PCs
    (“principal component regression”) is stable.
@@ -499,6 +501,7 @@ Setup, run instructions and a map of which lab proves which claim are in **[`lab
 
 | Part | Labs | README sections |
 |---|---|---|
+| 0. Why PCA? | 0 the curse of dimensionality: regression as columns approach rows, distances | 7 |
 | A. How PCA works | 1 hand example · 2 eigenvectors visually · 3 brute-force best direction · 4 eig vs SVD vs sklearn | 2, 4, 5 |
 | B. Why it's useful | 5 explained variance · 6 eigen-digits & 2-D map · 7 compression · 8 denoising · 9 PCA + classifier | 6, 7 |
 | C. Where it fails | 10 units · 11 non-linear · 12 label in low variance · 13 outliers · 14 nothing to compress · 15 PCA vs ICA | 8 |
@@ -561,7 +564,7 @@ No further input was available, so the following decisions were made on the auth
    by `PCA(n_components=0.95)` (6.3); “axis shift” is replaced by shift + rotation, and the reason for using variance is
    given (2.2). The audit file itself was not edited.
 3. **One notebook, not scripts.** The user preferred a single Jupyter notebook and all demos fit naturally in one, so
-   the lab is `lab/pca_lab.ipynb` (17 labs in 4 parts). A short `lab/README.md` was still added (what is where, how to
+   the lab is `lab/pca_lab.ipynb` (Lab 0 plus 17 labs in 4 parts). A short `lab/README.md` was still added (what is where, how to
    run, how to read results) because a newcomer benefits from it even with a single notebook, plus a
    `lab/requirements.txt`.
 4. **Datasets.** Only data that needs no download: synthetic data generated in the notebook and datasets bundled with
