@@ -34,8 +34,10 @@
   combine them: train a few *different* models on the same data, ask all of them, and combine their answers.
 * **Classification** (the answer is a category):
   * **hard voting** — every model names a class; the class named most often wins (the *mode* of the labels);
+    * **weighted:** each model's vote counts its weight instead of 1; the class with the largest total weight wins
+      ([3.3](#33-weighted-voting));
   * **soft voting** — every model says how likely each class is; average those probabilities and pick the largest;
-  * **weighted voting** — the same, but some models' votes count more.
+    * **weighted:** take a weighted average of the probabilities instead ([3.3](#33-weighted-voting)).
 * **Regression** (the answer is a number): take the **mean** of the models' numbers — or the **median**, which ignores
   one wildly wrong model.
 * It works when two things are true: each model is **better than a coin flip**, and the models make **different
@@ -62,7 +64,7 @@ Two details of the story are what make it work, and they are exactly the two con
 2. **The children touched *different* parts.** If all six had touched the trunk, the combined report would be a very
    confident "snake". Six identical opinions are one opinion. In ML: the models must make *different mistakes*.
 
-The machine-learning version is the picture below (the "good-fit" dataset of the lab). Three very different models
+The machine-learning version is the picture below, drawn by Lab 5 on the lab's "good-fit" dataset. Three very different models
 learn to separate red points (class 1) from blue points (class 0); black crosses mark their mistakes on test data.
 
 <img src="images/good_fit_members_vs_vote.png" width="990"/>
@@ -177,7 +179,8 @@ The setting with the best average wins. Only then is the test set used — once.
 1. Train $B$ different classifiers on the same training data (here $B = 3$).
 2. For a new point, ask each one for its **class**.
 3. Count the votes per class; the class with the most votes is the answer. That is the **mode** of the predicted
-   labels — no model is "selected"; each point gets its own count.
+   labels — no model is "selected"; each point gets its own count. (With weights, each vote counts its member's
+   weight instead of 1: [section 3.3](#33-weighted-voting).)
 4. If two classes get the same number of votes (possible with an even number of models, more than two classes, or
    weights), a fixed rule breaks the tie. scikit-learn picks the class that comes **first in its sorted list of
    classes** (section 6.4).
@@ -185,7 +188,7 @@ The setting with the best average wins. Only then is the test set used — once.
 ### 3.2 Soft voting (average the probabilities)
 
 1. Ask each classifier for its **probabilities** (`predict_proba`).
-2. Average them, class by class.
+2. Average them, class by class (with weights: a weighted average, [section 3.3](#33-weighted-voting)).
 3. The class with the largest average wins.
 
 Soft voting lets a member that is *very* sure outweigh two that are barely leaning the other way. That is good when
@@ -195,19 +198,34 @@ the "very sure" is earned, bad when a member is over-confident (section 4.5). It
 <img src="images/hard_vs_soft_hand_example.png" width="760"/>
 
 On sample s3 above, A and B lean to class 0 (0.40, 0.45) and C is very sure of class 1 (0.95): hard voting says 0
-(two votes to one), soft voting says 1 (average 0.60). On s4 it is the other way round. Section 5 works through it.
+(two votes to one), soft voting says 1 (average 0.60). On s4 it is the other way round. Section 5 works through it;
+Lab 1 draws the picture.
 
 ### 3.3 Weighted voting
 
-Give each member a weight $w_b$: a weighted hard vote adds up the *weights* of the members voting for each class; a
-weighted soft vote takes a weighted average of the probabilities. Weights let you trust a better member more — but
-they must be **chosen on training data by cross-validation**, never by looking at the test set (section 6.3).
+Give each member a weight $w_b$. It works with both kinds of vote:
+
+* **Weighted hard vote:** each member adds its weight (1 by default) to the class it predicts, and the class with the
+  largest total wins. scikit-learn computes `argmax(bincount(labels, weights))`.
+  * The winner needs the largest total, not more than half. With weights (2, 1, 1) and three members who name three
+    different classes, the class named by the weight-2 member wins with 2 of the 4.
+  * Ties are common in a hard vote, more so with more than two classes: equal weights and three different answers is
+    a three-way tie. The first class in `classes_` wins it (section 4.6).
+  * There is one weight per member, for all classes: a member cannot count more on class 3 than on class 5.
+* **Weighted soft vote:** a weighted average of the probabilities.
+
+Weights let you trust a better member more — but they must be **chosen on training data by cross-validation**, never
+by looking at the test set (section 6.3).
 
 ### 3.4 Regression
 
 1. Ask each regressor for its number.
 2. Combine with the **mean** (scikit-learn's `VotingRegressor`), a **weighted mean**, or the **median** (do it yourself
    with `np.median`) when one member may be wildly off.
+
+There is no *hard* vote for regression: regressors practically never output the same number. Its counterpart is the
+**median** (for 0/1 labels and an odd number of members, the majority vote *is* their median); the mean is the
+counterpart of soft voting.
 
 ---
 
@@ -240,15 +258,16 @@ $0.7^2 \times 0.3 = 0.441$): total **0.784** — better than any single voter's 
 Why it climbs: the share of voters who are right averages out to $p$ as $B$ grows (the law of large numbers), so if
 $p > 0.5$ the share ends up above one half with near certainty. For $p = 0.7$: 0.922 with 11 voters, 1.000 with 101.
 If $p < 0.5$ the same argument pushes the majority towards **always wrong** ($p = 0.45$: 0.367 with 11, 0.156 with
-101). And close to 0.5 the climb is slow ($p = 0.55$: 0.844 even with 101). (Lab 2.)
+101). And close to 0.5 the climb is slow ($p = 0.55$: 0.844 even with 101; $p = 0.51$ barely moves). (Lab 2, figure
+below.)
 
-<img src="images/condorcet_and_correlation.png" width="900"/>
+<img src="images/condorcet_independent_voters.png" width="632"/>
 
 ### 4.3 Why correlation kills it
 
 The theorem's quiet assumption is **independence**. Real models are trained on the same data and share many mistakes.
 
-*A simple model of shared mistakes (right panel of the picture above).* Suppose that with probability $\rho$ all voters copy
+*A simple model of shared mistakes (figure below).* Suppose that with probability $\rho$ all voters copy
 one common answer (right with probability $p$), and otherwise they vote independently. The correlation between any two
 voters' correctness is then exactly $\rho$. In the "copy" rounds counting cannot help, so even infinitely many voters
 are right at most
@@ -258,6 +277,8 @@ $$\rho\,p + (1-\rho)\times 1.$$
 With $p = 0.7$: $\rho = 0.2$ caps the majority at 0.94, $\rho = 0.5$ at 0.85, $\rho = 0.9$ at 0.73 — barely above a
 single voter (Lab 3 simulates 0.939, 0.850, 0.732 with 51 voters).
 
+<img src="images/correlated_voters.png" width="632"/>
+
 *The same thing for averaging numbers.* Let $B$ models have errors $e_1, \dots, e_B$, each with variance $\sigma^2$ and
 each pair with correlation $\rho$. The variance of their average is
 
@@ -265,11 +286,18 @@ $$\mathrm{Var}\Big(\frac1B\sum_b e_b\Big) = \frac{1}{B^2}\Big(\underbrace{B\sigm
 = \rho\sigma^2 + \frac{(1-\rho)\,\sigma^2}{B}.$$
 
 The second term shrinks as $B$ grows; the first, $\rho\sigma^2$, **never** does. Independent models ($\rho = 0$) average
-their noise away; perfectly correlated ones ($\rho = 1$) do not average anything (Lab 3: $\sigma^2 = 1$, $\rho = 0.3$,
-$B = 10$ → formula 0.370, simulation 0.364; the curve flattens at 0.3).
+their noise away; perfectly correlated ones ($\rho = 1$) do not average anything (Lab 3, figure below: $\sigma^2 = 1$,
+$\rho = 0.3$, $B = 10$ → formula 0.370, simulation 0.364; the curve flattens at 0.3).
+
+<img src="images/averaging_correlated_models.png" width="632"/>
 
 So "the aggregate of several models is always less noisy" is only true up to the floor $\rho\sigma^2$, and only if
 the members are not worse than each other — averaging a good model with a bad one can be worse than the good one.
+
+The folder overview derives the same formula with $\sigma^2$ and $\rho$ defined as averages over the members, which
+makes it exact even when the members have different variances and different pairwise correlations. It checks the
+formula against measured trees and shows how bagging and random forests each attack one of its two terms:
+[`../README.md`, section 3](../README.md#3-bias-and-variance-in-one-page).
 
 ### 4.4 Diversity: how to get different mistakes
 
@@ -413,12 +441,14 @@ median_pred = np.median(reg.transform(X_test), axis=1)   # transform() = one col
 | Parameter | What it does | Advice |
 |---|---|---|
 | `estimators` | list of `(name, model)`; models can be any classifiers (or regressors for `VotingRegressor`) | pick **different kinds** of model; check their mistakes overlap little (Lab 6) |
-| `voting` | `"hard"` (count labels) or `"soft"` (average `predict_proba`) | soft if the members' probabilities are calibrated; hard if one member may be confidently wrong (Labs 7, 11) |
-| `weights` | one number per member | default equal; choose by cross-validation on training data only (6.3) |
+| `voting` | `"hard"` (count labels; each vote counts its weight, 1 by default) or `"soft"` (average `predict_proba`, weighted by `weights`) | soft if the members' probabilities are calibrated; hard if one member may be confidently wrong (Labs 7, 11) |
+| `weights` | one number per member, for hard (weighted count) and soft (weighted average) votes alike ([3.3](#33-weighted-voting)) | default equal; choose by cross-validation on training data only (6.3) |
 | `n_jobs` | fit the members in parallel | useful when members are slow |
 | members' own settings | e.g. k of k-NN, C of logistic regression | **tune them first** — a well-tuned single member may already be as good as the vote (Lab 14) |
 
 ### 6.3 Choosing weights by cross-validation
+
+The grid below tries 27 weight vectors for a **weighted hard vote** ([3.3](#33-weighted-voting)):
 
 ```python
 from sklearn.model_selection import GridSearchCV
@@ -427,12 +457,217 @@ search = GridSearchCV(VotingClassifier(members, voting="hard"), grid, cv=5).fit(
 print(search.best_params_, search.score(X_test, y_test))   # the test set is used once, at the end
 ```
 
-On the good-fit map equal weights are already among the best (15 of the 27 weight vectors tie at CV accuracy 0.9935;
-Lab 9). On the bad-fit map CV picks (1, 1, 3) — k-NN's vote outweighs the other two together — and recovers 0.978
-(Lab 10). For regression, CV gives the wild polynomial member weight 0 (Lab 8).
+**What CV picks.**
 
-If you would rather *learn* the weights than search a grid, that is **stacking**: a small model (usually logistic
-regression) trained on the members' **out-of-fold** predictions (`StackingClassifier(..., cv=5)`, section 8.1).
+* Good-fit map: equal weights are already among the best. 15 of the 27 weight vectors tie at CV accuracy 0.9935
+  (Lab 9).
+* Bad-fit map: CV picks (1, 1, 3), so k-NN's vote outweighs the other two together. Accuracy recovers to 0.978
+  (Lab 10).
+* Regression: CV gives the wild polynomial member weight 0 (Lab 8).
+
+**The grid's two limits.**
+
+* It only tries the weights you list.
+* It re-fits all three members 5 times for **each** of the 27 candidates: 405 member fits.
+
+**What practitioners do instead.**
+
+* Competition practice and AutoML libraries (AutoGluon, auto-sklearn) fit the weights to the members' predictions on
+  held-out data, usually **out-of-fold predictions** (6.3.1).
+* They use one of two techniques: greedy forward selection (6.3.2) or a numerical optimiser (6.3.3).
+
+#### 6.3.1 The idea: score weights on predictions the members made blind
+
+A weight should reward a member for being right on points it has **not** seen. Its predictions on its own training
+points cannot show that: a 1-nearest-neighbour member is 100 % right there (8.1). The test set must stay unseen (6.5).
+**Out-of-fold (OOF) predictions** give every training point one prediction from each member that did not see it:
+
+1. Split the training set into K folds (here 5). Use the **same** split for every member, so that for each point all
+   members were trained on the same rows. For classification use `StratifiedKFold`: every fold then contains every
+   class, so each fold's model outputs all C probabilities.
+2. For each fold, fit each member on the other K − 1 folds and predict the held-out fold: K fits per member, done once.
+3. Collect the predictions into the **OOF table** (M members, C classes, n training points). The n points come from
+   the K rounds of step 2: each round's held-out fold, called the **validation fold**, supplies about n/K of them, and
+   together the K validation folds are the whole training set.
+   * regression: M × n numbers, member m's prediction for point i;
+   * C-class classification: M × n × C probabilities, member m's C probabilities for point i (they sum to 1).
+4. Choose the weights whose combined OOF prediction scores best against `y_train`:
+
+   $$w^\ast = \arg\min_{\,w_m \ge 0,\ \sum_m w_m = 1}\ \text{loss}\Big(y_\text{train},\ \sum_m w_m\,\text{OOF}_m\Big).$$
+
+   The OOF table is fixed, so $w$ is the only unknown. Trying a weight vector costs one weighted average and no
+   fitting, so thousands of candidates are cheap.
+5. Re-fit every member on the whole training set and combine them with the chosen weights:
+   `VotingRegressor(members, weights=w)` or `VotingClassifier(members, voting="soft", weights=w)`. Both divide by the
+   sum of the weights, so only their ratios matter.
+
+**What is trained when.**
+
+* At step 1 nothing is trained: `members` is a list of unfitted recipes.
+* Step 2 trains **temporary copies**: each member K times, each copy on K − 1 folds. They exist only to fill the OOF
+  table; `cross_val_predict` makes a fresh copy for every fold and throws it away afterwards.
+* Step 5 trains the **final** members once, on all training rows.
+
+So the weights are learned from the fold copies and used with the final copies. The final copies saw all the rows
+instead of (K − 1)/K of them. That is the standard practice.
+
+With the weights scaled to sum to 1, the combined prediction for point $i$ is
+
+$$\hat y_i = \sum_m w_m\,\hat y_{m,i}\ \ \text{(regression)}, \qquad
+\hat P_i(c) = \sum_m w_m\,P_{m,i}(c),\ \ \text{predicted class} = \arg\max_c \hat P_i(c)\ \ \text{(classification)}.$$
+
+In classification **one weight per member** multiplies all C of its probabilities, so the blend is again a set of
+probabilities that sum to 1. Both techniques work on this table:
+
+```python
+import numpy as np
+from sklearn.metrics import log_loss, mean_squared_error
+from sklearn.model_selection import KFold, StratifiedKFold, cross_val_predict
+
+M = len(members)
+folds = StratifiedKFold(5, shuffle=True, random_state=0)     # regression: KFold(5, shuffle=True, random_state=0)
+# oof[m, i]: member m's prediction for training row i (C probabilities or one number), from a copy that never saw i
+# cross_val_predict has already trained each fold copy with that member's own loss (k-NN has none: it stores rows)
+oof = np.array([cross_val_predict(m, X_train, y_train, cv=folds, method="predict_proba")
+                for _, m in members])                         # classification: shape (M, n, C)
+# oof = np.array([cross_val_predict(m, X_train, y_train, cv=folds) for _, m in members])   # regression: (M, n)
+
+def blend(w, oof):
+    """Weighted average of the members' OOF outputs: (n,) numbers or (n, C) probabilities."""
+    return np.tensordot(w / w.sum(), oof, axes=1)
+
+# a tuning loss, not a training loss: the weights are hyperparameters, scored on the blend with the metric you report
+loss = lambda w: log_loss(y_train, blend(w, oof))            # regression: mean_squared_error(y_train, blend(w, oof))
+w = find_weights(loss, M)    # forward selection (6.3.2) or SLSQP (6.3.3): M weights ≥ 0 that sum to 1
+```
+
+Two cautions apply to both techniques:
+
+* **The OOF score of the chosen weights is optimistic**, because the weights were picked to make it high. Judge the
+  result on data the weights never saw: the test set, once, or an outer cross-validation around the whole procedure.
+* **Every fitted weight is one more number learned from the training set.** With few rows, or with members that are
+  about equally good, fitted weights mostly fit noise, and equal weights do as well or better (6.3.4).
+
+**A bagging ensemble as a member.**
+
+* A random forest, or any bagging ensemble, is one member: a black box like the others.
+* In step 2 the whole forest is fitted on the K − 1 folds, so its bootstrap samples are drawn from those rows only.
+  None of its trees sees the held-out fold.
+* The bootstrap happens *inside* the member; out-of-fold works one level up, *across* members.
+* Bagging itself never needs this rule: its trees get fixed, equal weights, so nothing is learned from their
+  predictions.
+
+**Out-of-fold is not out-of-bag.** Both follow one principle: predict each row only with models that did not see it.
+
+* **Out-of-fold (OOF)** uses K-fold splits, works for any model and costs K extra fits per member.
+* **Out-of-bag (OOB)** is a free by-product inside bagging. Each row is predicted by the trees whose bootstrap sample
+  missed it, about 37 % of them (`oob_prediction_` / `oob_decision_function_`;
+  [`../02-bagging/README.md`, section 4.6](../02-bagging/README.md#46-the-out-of-bag-estimate)).
+* A forest member's OOB predictions could fill its column of the OOF table; they are honest too. But they come from
+  about a third of the trees, while the other columns come from models trained on (K − 1)/K of the rows (80 % with
+  5 folds), so the columns are not like for like. Using OOF for every member is cleaner.
+
+#### 6.3.2 Technique 1: greedy forward selection (Caruana's ensemble selection, often called hill climbing)
+
+- Start with the best single member. 
+- Then repeatedly try adding **one more copy** of each member to the blend, keep the
+copy that improves the OOF score most, and repeat.
+- [Caruana et al.](https://www.cs.cornell.edu/~alexn/papers/shotgun.icml04.revised.rev2.pdf) repeat this for a fixed number of steps and return the best of the nested ensembles. The code below
+  stops at the first step that does not help, which is a simplification: with replacement, the score curve is flat
+  enough that this rarely loses much.
+- A member's weight is its share of the copies, and a
+member never added gets weight 0 ([Caruana et al., 2004](https://www.cs.cornell.edu/~alexn/papers/shotgun.icml04.revised.rev2.pdf)).
+
+```python
+def forward_select(loss, M, n_steps=100, tol=0.0):
+    """Caruana's ensemble selection: add one member at a time (repeats allowed); weight = share of additions."""
+    one = np.eye(M)                                             # identity matrix of order M x M, one[m] = one copy of member m
+    counts = one[np.argmin([loss(one[m]) for m in range(M)])]   # start: the best single member
+    best = loss(counts)
+    for _ in range(n_steps):
+        trials = [loss(counts + one[m]) for m in range(M)]      # try one more copy of each member
+        m = int(np.argmin(trials))
+        if trials[m] >= best - tol:                             # the best copy gains no more than tol: stop
+            break
+        counts, best = counts + one[m], trials[m]
+    return counts / counts.sum()
+
+# from the previous 6.3.1 codes nippet
+loss = lambda w: log_loss(y_train, blend(w, oof))            # regression: mean_squared_error(y_train, blend(w, oof))
+w = forward_select(loss, len(members))
+# any score works, e.g. accuracy (lower = better, hence the minus):
+# w = forward_select(lambda w: -accuracy_score(y_train, np.unique(y_train)[blend(w, oof).argmax(axis=1)]), len(members))
+```
+
+* **Regression:** score the blended numbers with the metric you will report (RMSE, MAE, ...).
+* **Multi-class classification:** score the blended probabilities with log loss, accuracy, macro-F1, ... Forward selection
+  only *compares* scores and never needs a slope, so it is the one technique here that can optimise accuracy or F1
+  directly. For the same reason it is the only one that can weight a **hard** vote ([3.3](#33-weighted-voting)): build the OOF table from
+  `predict` labels and blend by weighted counting.
+* The weights are non-negative, sum to 1 and change in coarse steps (one copy at a time). AutoGluon's final
+  `WeightedEnsemble` model and auto-sklearn's ensemble are built this way.
+* **`n_steps` is a cap, and it can cut the search short.** If the loop uses all `n_steps` additions and the last one
+  still improved the score, there was more to gain, and nothing in the output says so. The cap also sets how fine the
+  weights can get: after N copies every weight is a multiple of 1/N. With many members, raise `n_steps`; the stop rule
+  ends the loop earlier on its own when nothing more helps.
+* **`tol` is the smallest gain that counts**, like `min_delta` in early stopping. With `tol=0` the loop goes on while
+  any copy lowers the score at all, which can mean many steps that gain next to nothing on the OOF rows. A small
+  positive `tol` stops it when the best copy gains no more than that.
+
+#### 6.3.3 Technique 2: a numerical optimiser on the weights
+
+Let an optimiser search all weights at once: minimise the OOF loss over $w$ subject to $w_m \ge 0$ and
+$\sum_m w_m = 1$. `scipy.optimize.minimize` with `method="SLSQP"` (sequential least squares programming) handles both constraints:
+
+```python
+from scipy.optimize import minimize
+
+M = len(members)
+
+# bounds for each weight value
+# the shape is [(0,1),(0,1),(0,1),(0,1),..M times]
+# the constraint is of an equality kind: w.sum()-1 = 0.
+# SQSLP is one of the many ways to solve constrained optimization problems
+# - here it is to solve the minimzation of weighted sum of losses problem under the constraint that all weights add to 1
+res = minimize(loss, x0=np.full(M, 1 / M), method="SLSQP",       # start from equal weights
+               bounds=[(0, 1)] * M, constraints={"type": "eq", "fun": lambda w: w.sum() - 1})
+w = res.x
+```
+
+* **Regression:** minimise the squared error. This is least squares with non-negative weights that sum to 1.
+* **Multi-class classification:** minimise **log loss**, not accuracy. The optimiser steps downhill along the slope of
+  the loss, and accuracy has no slope: a tiny change of a weight flips no prediction, so accuracy stays the same and
+  SLSQP stops where it started. Log loss moves with every probability. Pick the class by `argmax` afterwards.
+* **SLSQP is gradient-based, so score it with a smooth loss.**
+  * scipy's solver table lists it as "Uses Gradient"
+    ([scipy docs](https://docs.scipy.org/doc/scipy/tutorial/optimize.html#local-minimization-solver-comparison)).
+  * Smooth scores: squared error, log loss.
+  * Scores with jumps (accuracy, F1, the error of a hard vote): use forward selection (6.3.2) instead.
+  * scipy's docs list no failure cases; the last point follows from the gradient-based design.
+* With either loss and these constraints, the loss surface over the weights is a single bowl, so there is no wrong
+  valley to get stuck in. Its bottom is often flat, though: quite different weights can give almost the same loss.
+  Read the exact values loosely.
+
+#### 6.3.4 Which one, and why equal weights come first
+
+| | Forward selection | Optimiser (SLSQP) |
+|---|---|---|
+| What is fitted | M weights ≥ 0 summing to 1, in steps of one copy | M weights ≥ 0 summing to 1 |
+| Scores it can optimise | any: RMSE, MAE, log loss, accuracy, F1 | smooth ones: squared error, log loss |
+| Weighted hard vote ([3.3](#33-weighted-voting)) | yes | no (no slope) |
+| Result goes into | `VotingClassifier` / `VotingRegressor(weights=w)` | `VotingClassifier(voting="soft")` / `VotingRegressor(weights=w)` |
+
+**Equal weights are the baseline to beat.** In forecasting, the plain average of several forecasts beats "optimal"
+estimated weights so often that the effect has a name: the *forecast combination puzzle* (Stock & Watson, 2004).
+Smith & Wallis (2009) explain it: estimated weights carry estimation noise, and when the best weights are close to
+equal, that noise costs more than the weights gain. The labs show both sides:
+
+* On the good-fit map, equal weights already tie for best (Lab 9).
+* On the bad-fit map and in Lab 8, one member is much better or much worse than the rest, and fitted weights pay off:
+  (1, 1, 3) in Lab 10 and weight 0 for the wild polynomial in Lab 8.
+
+Fit weights when the members clearly differ in quality and there are many rows to fit them on. Otherwise keep equal
+weights.
 
 ### 6.4 Reading the output
 
@@ -625,7 +860,7 @@ Everything above is demonstrated in two Jupyter notebooks. Setup and a map of wh
 | **Member / base model** | One model inside the ensemble. |
 | **Hard voting** | Each member names a class; the most common class wins (the mode). |
 | **Soft voting** | Average the members' class probabilities; the largest average wins. |
-| **Weighted voting** | Votes or probabilities multiplied by a per-member weight before adding up. |
+| **Weighted voting** | Each member's vote or probabilities multiplied by its weight before adding up; works with hard and soft voting (3.3). |
 | **Mode / mean / median** | Most common value / average / middle value after sorting. |
 | **Calibrated** | A model whose "90 % sure" is right about 90 % of the time. |
 | **Condorcet's jury theorem** | Independent voters each right with p > 0.5: the majority's accuracy → 1 as their number grows (→ 0 if p < 0.5). |
@@ -637,6 +872,7 @@ Everything above is demonstrated in two Jupyter notebooks. Setup and a map of wh
 | **Cross-validation (CV)** | Rotating which part of the training data is held out, to choose settings without the test set. |
 | **Stacking** | A second-level model that learns how to combine the members' outputs. |
 | **Out-of-fold prediction** | A member's prediction for a training point made by a copy of the member that did not see that point. |
+| **Greedy forward selection (ensemble selection, hill climbing)** | Fitting voting weights by repeatedly adding the member copy that most improves the out-of-fold score (6.3.2). |
 | **Leakage** | Letting test-set information influence training or model choice. |
 | **Tie-breaking** | The rule for a draw; scikit-learn: first class in `classes_`. |
 
@@ -660,6 +896,31 @@ Everything above is demonstrated in two Jupyter notebooks. Setup and a map of wh
   pluralité des voix* — the original jury theorem.
 * David Wolpert (1992), *Stacked Generalization*, Neural Networks 5(2) — stacking and why out-of-sample predictions are
   needed.
+* Rich Caruana, Alexandru Niculescu-Mizil, Geoff Crew & Alex Ksikes (2004),
+  [*Ensemble Selection from Libraries of Models*](https://www.cs.cornell.edu/~alexn/papers/shotgun.icml04.revised.rev2.pdf), ICML — forward selection with repeated members (6.3.2).
+* James Stock & Mark Watson (2004), *Combination Forecasts of Output Growth in a Seven-Country Data Set*, Journal of
+  Forecasting 23(6), and Jeremy Smith & Kenneth Wallis (2009), *A Simple Explanation of the Forecast Combination
+  Puzzle*, Oxford Bulletin of Economics and Statistics 71(3) — why equal weights so often beat fitted ones (6.3.4).
+* Kazuki Onodera, Théo Viel, Gilberto Titericz & Chris Deotte (2025), *The Kaggle Grandmasters Playbook: 7
+  Battle-Tested Modeling Techniques for Tabular Data*, NVIDIA Technical Blog
+  (<https://developer.nvidia.com/blog/the-kaggle-grandmasters-playbook-7-battle-tested-modeling-techniques-for-tabular-data>)
+  — hill climbing on out-of-fold predictions as competition practice (6.3).
+* **Several targets at once** (multi-output regression, multi-label classification). In scikit-learn 1.9.1,
+  `VotingRegressor`, `VotingClassifier` and the stacking estimators accept only a 1-D target. These papers build
+  multi-label and multi-target models from one model per label, combined by voting or averaging:
+  * Jesse Read, Bernhard Pfahringer, Geoff Holmes & Eibe Frank, *Classifier Chains for Multi-label Classification*,
+    ECML PKDD (2009) and Machine Learning 85(3) (2011). A chain fits one classifier per label, and each one also sees
+    the labels before it in the chain as extra inputs. An **ensemble of classifier chains** (ECC) trains chains with
+    random label orders and combines them by a vote per label, which removes the dependence on one order.
+  * Grigorios Tsoumakas & Ioannis Vlahavas, *Random k-Labelsets: An Ensemble Method for Multilabel Classification*,
+    ECML (2007), and Tsoumakas, Ioannis Katakis & Vlahavas, *Random k-Labelsets for Multilabel Classification*, IEEE
+    TKDE 23(7) (2011). In **RAkEL**, each member predicts the whole combination of a random subset of k labels as one
+    class. A label's final answer is the average vote of the members whose subset contains it, thresholded at 0.5.
+    It is not in scikit-learn.
+  * Eleftherios Spyromitros-Xioufis, Grigorios Tsoumakas, William Groves & Ioannis Vlahavas, *Multi-target
+    Regression via Input Space Expansion: Treating Targets as Inputs*, Machine Learning 104(1) (2016). Its **ensemble
+    of regressor chains (ERC)** averages several chains with different target orders. The variants that use
+    out-of-fold (cross-validated) predictions are the ones the paper recommends (6.3.1).
 * Alexandru Niculescu-Mizil & Rich Caruana (2005), *Predicting Good Probabilities with Supervised Learning* — which
   models are over- or under-confident and how to calibrate them.
 
@@ -672,7 +933,7 @@ No further input was available, so the following decisions were made on the auth
 1. **Audience.** "Extremely new to ML" was taken to mean: school algebra and basic Python, no statistics. Every model
    used as a member (logistic regression, Gaussian naive Bayes, k-NN), probability outputs, calibration, correlation,
    variance, the binomial formula and cross-validation are introduced before use (section 2).
-2. **Scope.** Voting for classification (hard, soft, weighted) and regression (mean, median, weighted mean),
+2. **Scope.** Voting for classification (hard or soft, each optionally weighted) and regression (mean, median, weighted mean),
    Condorcet's theorem, the correlation formula, diversity, ties, weights by CV. **Stacking** appears only as the fix
    for voting's main failure (8.1, Lab 10, from-scratch §5), not as a full technique. Bagging and random forests are
    only mentioned as ways to get diversity (they are the next folders).
@@ -715,6 +976,8 @@ No further input was available, so the following decisions were made on the auth
 8. **From-scratch notebook.** NumPy implements the vote rules and all three members (scikit-learn only for datasets,
    `train_test_split` and the reference models). Logistic regression uses plain gradient descent on scikit-learn's
    objective, so it matches to scikit-learn's solver tolerance (~1e-4); naive Bayes and k-NN match to ~1e-16 / exactly.
-9. **Structure and links.** Theory here; two executed notebooks with saved outputs; README images made by a separate
-   script from the same CSVs. Links to `../README.md` assume the folder README planned in `../EVALUATION.md`.
+9. **Structure and links.** Theory here; two executed notebooks with saved outputs. Every plot in this README is saved
+   into `images/` by the lab cell that computes it (`lab/voting_lab.ipynb`: section 1 by Lab 5, 3.2 by Lab 1,
+   4.2–4.3 by Labs 2 and 3, 8.1 by Lab 10); the elephant picture is the illustration kept from the old notes. Links to
+   `../README.md` assume the folder README planned in `../EVALUATION.md`.
 10. **Nothing was committed.** The changes are left in the working tree for review.

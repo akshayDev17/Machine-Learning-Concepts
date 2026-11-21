@@ -600,6 +600,17 @@ are in **[`lab/README.md`](lab/README.md)**.
 * A. Niculescu-Mizil & R. Caruana, *Predicting good probabilities with supervised learning*, ICML 2005 — boosted models'
   calibration (8.5).
 * scikit-learn user guide, *AdaBoost* (ensemble methods), and the source `sklearn/ensemble/_weight_boosting.py`.
+* **Several targets at once** (multi-label classification). In scikit-learn 1.9.1, `AdaBoostClassifier` and
+  `AdaBoostRegressor` reject a 2-D target, so the only route is one AdaBoost per label (`MultiOutputClassifier`).
+  The papers boost all labels in one run:
+  * R. E. Schapire & Y. Singer, *Improved boosting algorithms using confidence-rated predictions*, Machine Learning 37
+    (1999). It introduces **AdaBoost.MH**, which turns multi-label (and multi-class) learning into one binary problem
+    over (row, label) pairs. There is one weight per pair, and the boosting minimises the Hamming loss.
+  * R. E. Schapire & Y. Singer, *BoosTexter: A boosting-based system for text categorization*, Machine Learning 39
+    (2000) — AdaBoost.MH (and its ranking version AdaBoost.MR) applied to multi-label text.
+  * B. Kégl, *The return of AdaBoost.MH: multi-class Hamming trees*, ICLR (2014). Each round grows one
+    vector-valued tree that serves all classes, instead of K one-vs-all problems. It reports results on par with SVMs
+    and the best multi-class boosting method of the time (AOSOLogitBoost).
 * The old notes' “Data preparation for AdaBoost” advice (quality data, outliers, noisy labels) closely follows Jason
   Brownlee's *Boosting and AdaBoost for Machine Learning* (Machine Learning Mastery); credited here and tested in Labs 10–11.
 

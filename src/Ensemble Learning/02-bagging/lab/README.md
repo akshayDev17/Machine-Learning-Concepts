@@ -125,3 +125,20 @@ each demonstrated with a timing, a counter-example or a failing comparison. Both
 If your numbers differ in the third decimal place from the saved outputs, that is due to library versions and is fine
 (timings always differ). If a lab errors, re-run the imports cell and the labs above it — most errors mean a variable
 from an earlier lab is missing.
+
+## <font color="red">TODO: several targets at once (multi-output regression, multi-label classification)</font>
+
+Not done yet. This lab should show how bagging handles a target with several columns. Sources are in the README's
+Further reading ("Several targets at once").
+The problem and the library limits are in [section 14 of the folder README](../../README.md#14-several-targets-at-once-multi-output-regression-and-multi-label-classification).
+
+- [ ] `BaggingRegressor` on a 2-D target builds **one** ensemble whose trees predict every target (leaf values of
+  shape (nodes, k, 1)). Compare it with `MultiOutputRegressor(BaggingRegressor())` (k ensembles) on:
+  - per-target test error;
+  - number of trees, nodes and fit time;
+  - targets that share a signal vs targets that depend on different features.
+- [ ] `BaggingClassifier` rejects a 2-D target (`y should be a 1d array`). Show `MultiOutputClassifier(BaggingClassifier())`,
+  and in the from-scratch notebook bag multi-output `DecisionTreeClassifier`s by hand (they accept a 2-D target).
+- [ ] `BaggingRegressor(oob_score=True)` crashes on a 2-D target in scikit-learn 1.9.1 (`operands could not be broadcast
+  together`, from `_set_oob_score`); `RandomForestRegressor(oob_score=True)` does not. Show the error and compute the
+  per-target OOB score by hand from `estimators_samples_`.

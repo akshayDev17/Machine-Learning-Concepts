@@ -121,3 +121,15 @@ had to be solved. Both notebooks end with a **Summary** table.
 If your numbers differ in the third decimal place from the saved outputs, that is due to library versions (or, for timings,
 your machine) and is fine. The from-scratch vs scikit-learn comparison should still show 100 % identical predictions. If a lab
 errors, re-run the imports cell and the cells above it — most errors mean a variable from an earlier cell is missing.
+
+## <font color="red">TODO: several targets at once (multi-output regression, multi-label classification)</font>
+
+Not done yet. This lab should show how AdaBoost handles several labels at once. In scikit-learn 1.9.1,
+`AdaBoostClassifier` and `AdaBoostRegressor` reject a 2-D target (`y should be a 1d array`). Sources are in the README's
+Further reading ("Several targets at once").
+The problem and the library limits are in [section 14 of the folder README](../../README.md#14-several-targets-at-once-multi-output-regression-and-multi-label-classification).
+
+- [ ] Show the error, then `MultiOutputClassifier(AdaBoostClassifier())`: one boosting run per label.
+- [ ] From scratch: AdaBoost.MH (Schapire & Singer, 1999) vs one AdaBoost per label, compared on Hamming loss and
+  number of stumps. AdaBoost.MH keeps one weight per (row, label) pair. Each round it fits one stump whose split is
+  shared by all labels and whose leaves hold one vote per label.

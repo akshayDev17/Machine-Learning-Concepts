@@ -638,6 +638,35 @@ scikit-learn:
   method for constructing decision forests* (IEEE PAMI, 1998).
 * scikit-learn user guide, *Ensembles: forests of randomized trees*, and the example *Permutation Importance vs Random
   Forest Feature Importance (MDI)*.
+* **Several targets at once** (multi-output regression, multi-label classification). In scikit-learn 1.9.1, a
+  forest fitted on a 2-D target is **one** forest, not one per target:
+  * every leaf stores all targets' values;
+  * the impurity of a node is the average of the per-target impurities, so a split is scored by its total drop in
+    error over all targets;
+  * a large-variance target therefore steers the splits unless the targets are standardised.
+  * scikit-learn user guide, *Decision Trees → Multi-output problems*: "use splitting criteria that compute the
+    average reduction across all n outputs". The source is the criterion code in `sklearn/tree/_criterion.pyx`.
+  * The trees underneath:
+    * Mark Segal, *Tree-Structured Methods for Longitudinal Data*, JASA 87 (1992), and Glenn De'ath, *Multivariate
+      Regression Trees*, Ecology 83(4) (2002): one tree for a whole vector of responses. De'ath's version sums the
+      squared errors over the responses.
+    * Hendrik Blockeel, Luc De Raedt & Jan Ramon, *Top-down Induction of Clustering Trees*, ICML (1998): predictive
+      clustering trees, the basis of the papers below.
+  * Mark Segal & Yuanyuan Xiao, *Multivariate Random Forests*, WIREs Data Mining and Knowledge Discovery 1(1) (2011)
+    — random forests for a vector response.
+  * Dragi Kocev, Celine Vens, Jan Struyf & Sašo Džeroski, *Tree Ensembles for Predicting Structured Outputs*,
+    Pattern Recognition 46(3) (2013).
+    * One random forest for all targets and one per target were not significantly different in accuracy.
+    * The shared forest was 4 times faster to build and 3.4 times smaller.
+    * The paper's trees standardise each target's variance, so that every target counts equally. scikit-learn's
+      trees do not.
+  * Gjorgji Madjarov, Dragi Kocev, Dejan Gjorgjevikj & Sašo Džeroski, *An Extensive Experimental Comparison of
+    Methods for Multi-label Learning*, Pattern Recognition 45(9) (2012). It compares 12 methods with 16 measures on
+    11 datasets. A shared random forest of predictive clustering trees (RF-PCT) and HOMER (a method that splits the
+    labels into a hierarchy) were the best overall.
+  * Eleftherios Spyromitros-Xioufis et al., *Multi-target Regression via Input Space Expansion*, Machine Learning
+    104(1) (2016). There, the multi-objective random forest (one forest for all targets) did **not** beat
+    independent per-target bagged trees.
 * The old notes linked a ChatGPT conversation about using the median of the trees and an interactive DBSCAN
   visualiser as a model for a forest animation; they are replaced by Lab 10 and the static diagram in section 1.
 

@@ -729,6 +729,17 @@ which claim are in **[`lab/README.md`](lab/README.md)**.
 * Jerome Friedman, *Greedy Function Approximation: A Gradient Boosting Machine* (2001) — classic first-order gradient
   boosting (see [`../05-gradient-boosting/README.md`](../05-gradient-boosting/README.md)).
 * scikit-learn user guide: *Histogram-Based Gradient Boosting* — the close cousin compared in Labs 9 and §6.5.
+* **Several targets at once** (multi-output regression, multi-label classification): XGBoost documentation,
+  *Multiple Outputs* (<https://xgboost.readthedocs.io/en/stable/tutorials/multioutput.html>).
+  * Since 1.6, XGBoost has **experimental** support for multi-output regression and multi-label classification
+    (Python package only; still experimental as of 3.0, with limited objectives and metrics).
+  * The default `multi_strategy="one_output_per_tree"` builds one model per target inside one booster.
+  * Since 2.0, `multi_strategy="multi_output_tree"` (with `tree_method="hist"`) grows trees whose leaves hold one
+    value per target.
+  * Since 3.2, an experimental interface based on SketchBoost finds the tree structure from a reduced gradient and
+    computes the leaf values from the full one.
+  * The paper and the other libraries (LightGBM, CatBoost) are in
+    [`../05-gradient-boosting/`](../05-gradient-boosting/README.md#12-further-reading).
 * The old notes' XGBoost-classifier bullets ("two reasons to use XGBoost … execution speed, model performance")
   follow Jason Brownlee, *A Gentle Introduction to XGBoost for Applied Machine Learning* (Machine Learning Mastery).
 

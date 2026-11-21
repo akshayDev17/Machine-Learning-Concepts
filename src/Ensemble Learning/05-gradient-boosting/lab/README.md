@@ -125,3 +125,21 @@ the timings depend on your machine. The from-scratch notebook's *exact* agreemen
 (older versions build the trees with a slightly different split criterion, so tiny differences can appear there). If a
 lab errors, re-run the imports cell and the cells above it — most errors mean a variable from an earlier cell is
 missing.
+
+## <font color="red">TODO: several targets at once (multi-output regression, multi-label classification)</font>
+
+Not done yet. This lab should show how gradient boosting handles a target with several columns. In scikit-learn
+1.9.1, `GradientBoosting*` and `HistGradientBoosting*` reject a 2-D target. Sources are in the README's
+Further reading ("Several targets at once").
+The problem and the library limits are in [section 14 of the folder README](../../README.md#14-several-targets-at-once-multi-output-regression-and-multi-label-classification).
+
+- [ ] Show the error, then `MultiOutputRegressor(GradientBoostingRegressor())`: one boosted model per target.
+- [ ] From scratch, the two designs:
+  - one tree per target per round, each fitted to that target's residuals;
+  - one multi-output tree per round, fitted to the (n, k) residual matrix (scikit-learn's `DecisionTreeRegressor`
+    accepts it).
+
+  Compare per-target error, number of trees and time on related vs unrelated targets.
+- [ ] Multi-label with log-loss: the residuals are y − p per label. Build the same two designs.
+- [ ] Optional, if installed: CatBoost `MultiRMSE` / `MultiLogloss` (one model for all targets). LightGBM has no native
+  multi-output support.

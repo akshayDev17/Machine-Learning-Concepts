@@ -126,3 +126,21 @@ Both notebooks end with a **Summary** table.
 If your numbers differ in the third decimal place from the saved outputs, that is due to library versions or the
 machine and is fine; timings will differ more. If a lab errors, re-run the imports cell and the cells above it — most
 errors mean a variable from an earlier cell is missing.
+
+## <font color="red">TODO: several targets at once (multi-output regression, multi-label classification)</font>
+
+Not done yet. This lab should show how a random forest handles a target with several columns: one forest for all
+targets by default, not one per target. Sources are in the README's Further reading ("Several targets at once").
+The problem and the library limits are in [section 14 of the folder README](../../README.md#14-several-targets-at-once-multi-output-regression-and-multi-label-classification).
+
+- [ ] One forest on a 2-D target vs one forest per target (`MultiOutputRegressor`). Report per-target test error,
+  number of trees and nodes, and fit time, on three kinds of targets:
+  - targets that share one signal;
+  - targets that use the same features through different functions;
+  - targets that depend on different features.
+- [ ] Target scale: multiply one target by 100 and watch it take over the shared splits, then standardise the targets
+  and compare.
+- [ ] Multi-label: `predict_proba` returns a list of L arrays. Show per-label F1 for rare vs common labels, since a rare
+  label has a small Gini and little say in the averaged split score.
+- [ ] From scratch: score a split by the per-target squared-error drops added up, and check that it picks
+  scikit-learn's split.

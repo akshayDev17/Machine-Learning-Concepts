@@ -667,6 +667,25 @@ scikit-learn to ~1e-14:
 * The two screenshots in §5.2 come from a video lecture whose source was not recorded in the old notes.
 * scikit-learn user guide, *Gradient-boosted trees* and *Histogram-Based Gradient Boosting*; the installed source
   `sklearn/ensemble/_gb.py` was read to verify every library detail in this README.
+* **Several targets at once** (multi-output regression, multi-label classification). In scikit-learn 1.9.1,
+  `GradientBoosting*` and `HistGradientBoosting*` reject a 2-D target, so the only route is one boosted model per
+  target (`MultiOutputRegressor` / `MultiOutputClassifier`). The libraries differ:
+  * Leonid Iosipoi & Anton Vakhrushev, *SketchBoost: Fast Gradient Boosted Decision Tree for Multioutput Problems*,
+    NeurIPS (2022) (arXiv:2211.12858). There are two designs:
+    * **One tree per target per round:** the default in XGBoost; LightGBM can only be wrapped per target.
+    * **One multi-output tree per round:** CatBoost's way.
+
+    Scoring a split for a multi-output tree costs time in proportion to the number of targets. SketchBoost scores
+    splits on a much smaller "sketch" of the gradient matrix (a few chosen columns, a random projection, or a
+    truncated SVD) and reports training up to 40 times faster with comparable accuracy. In their comparison, one
+    tree per output generalised worse on most datasets, but that comparison also mixes in other library
+    differences. The code is in Py-Boost (GPU only).
+  * CatBoost documentation: *MultiRMSE* (multi-target regression) and *MultiLogloss* / *MultiCrossEntropy*
+    (multi-label) — one model for all targets.
+  * LightGBM has no native multi-output support. The maintainers' suggestion is to wrap it in
+    `MultiOutputRegressor`; see LightGBM issue
+    [#524](https://github.com/microsoft/LightGBM/issues/524).
+  * XGBoost's two options are in [`../06-xgboost/`](../06-xgboost/README.md#12-further-reading).
 * Next steps: [`../04-adaboost/`](../04-adaboost/README.md) (re-weighting instead of residuals) and
   [`../06-xgboost/`](../06-xgboost/README.md) (second-order trees, regularisation, histograms).
 

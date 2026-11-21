@@ -73,7 +73,7 @@ Both notebooks end with a **Summary** table listing every lab / section and what
 | Lab | Question | README section | What to look at |
 |---|---|---|---|
 | **Part A — How voting works** | | | |
-| 1 | Do the hand-worked numbers come out (hard 0.6, soft 1.0, tie → class 0; mean / median)? | 5 | printed tallies, averages and errors |
+| 1 | Do the hand-worked numbers come out (hard 0.6, soft 1.0, tie → class 0; mean / median)? | 3.2, 5 | printed tallies, averages and errors; bar chart of s3 and s4, where hard and soft vote disagree |
 | 2 | Does a majority of independent voters get better as it grows? | 4.2 | formula vs simulation (0.784); curves rising for p > 0.5, falling for p = 0.45 |
 | 3 | What if the voters share mistakes? | 4.3 | curves flattening at ρp + (1 − ρ); variance of the average sitting on ρσ² + (1 − ρ)σ²/B |
 | 4 | How does scikit-learn break ties, and why can a plain `SVC` not join a soft vote? | 4.6, 6.4, 6.6 | 7 ties all → class 0 (`"cat"` with text labels); `AttributeError`; the 1.9 `FutureWarning` |
@@ -84,7 +84,7 @@ Both notebooks end with a **Summary** table listing every lab / section and what
 | 8 | Mean or median for regression? | 3.4, 8.5 | polynomial's worst error 46.7; mean 0.965 vs median 0.314; CV weights (1, 1, 0) |
 | 9 | How do I choose weights without cheating? | 6.3 | 27 weight vectors compared by 5-fold CV on the training set; test used once |
 | **Part C — Where voting fails** | | | |
-| 10 | What if only one member can solve it? | 8.1 | hard vote 0.803 vs k-NN 0.978; CV weights (1, 1, 3) and stacking (weights 0.31, 0.30, 7.07) recover 0.978 |
+| 10 | What if only one member can solve it? | 8.1 | five decision-region panels; hard vote 0.803 vs k-NN 0.978; CV weights (1, 1, 3) and stacking (weights 0.31, 0.30, 7.07) recover 0.978 |
 | 11 | What does an over-confident member do to soft voting? | 4.5, 8.4 | NB > 99 % sure on 82 % of points; soft 0.833 < hard 0.850; calibrated 0.880; histogram |
 | 12 | Do copies of one model help? | 8.3 | three k-NNs: mistake correlations 0.83–0.93, vote 0.980 = one copy |
 | 13 | What does a vote cost? | 8.6, 8.7 | fit / predict times ≈ the sum of the members'; LR's three numbers vs nothing to read off the vote |
@@ -123,3 +123,21 @@ Both notebooks end with a **Summary** table listing every lab / section and what
 If your numbers differ in the third decimal place from the saved outputs, that is due to library versions and is fine.
 If a lab errors, re-run the imports cell and the cells above it — most errors mean a variable from an earlier cell is
 missing.
+
+## <font color="red">TODO: several targets at once (multi-output regression, multi-label classification)</font>
+
+Not done yet. This lab should show how a vote handles a target with several columns. In scikit-learn 1.9.1,
+`VotingRegressor`, `StackingRegressor` and `StackingClassifier` raise `y should be a 1d array` on a 2-D target, and
+`VotingClassifier` raises `NotImplementedError` for multi-label. Sources are in the README's
+Further reading ("Several targets at once").
+The problem and the library limits are in [section 14 of the folder README](../../README.md#14-several-targets-at-once-multi-output-regression-and-multi-label-classification).
+
+- [ ] Show the errors, then the two ways around them:
+  - `MultiOutputRegressor(VotingRegressor(...))` / `MultiOutputClassifier(VotingClassifier(...))`: one vote per
+    target.
+  - Members that accept a 2-D target themselves (e.g. `LinearRegression`, `KNeighborsRegressor`, a random forest):
+    their (n, k) outputs averaged by hand.
+- [ ] Out-of-fold weights (README 6.3) fitted per target vs one weight vector for all targets: do different targets
+  want different weights?
+- [ ] Multi-label: an ensemble of classifier chains (random label orders, one vote per label) vs one vote per label,
+  compared on Hamming loss and on subset accuracy.

@@ -24,7 +24,8 @@
 11. [Further reading](#11-further-reading)
 12. [Claude Code skills that teach tuning](#12-claude-code-skills-that-teach-tuning)
 13. [Findings to review: non-tree members, and when an ensemble does not help](#13-findings-to-review-non-tree-members-and-when-an-ensemble-does-not-help)
-14. [Appendix - Assumptions made](#appendix---assumptions-made)
+14. [Several targets at once: multi-output regression and multi-label classification](#14-several-targets-at-once-multi-output-regression-and-multi-label-classification)
+15. [Appendix - Assumptions made](#appendix---assumptions-made)
 
 ---
 
@@ -288,6 +289,7 @@ what does not, and when the explanation stops being true.
 |---|---|
 | Bagging works because the individual estimators average out each other's *errors*, so the predictions are stable enough. | Bagging works because trees trained on different bootstrap samples make partly different errors. Averaging cancels the part of their errors that differs from tree to tree, which makes the prediction vary less from one training set to another. The part they share — their common bias and the error inherited from the same training data — does not cancel, so the gain stops at a floor and needs unstable members to begin with. |
 | Boosting works because sequential learners learn from the mistakes of their immediate predecessor and rectify them. | Boosting works because each new weak learner is fitted to what the ensemble built so far still gets wrong — the residuals in gradient boosting, the up-weighted misclassified rows in AdaBoost — and a shrunken copy of it is added to the sum, so each round removes a little more of the remaining systematic error (bias). The prediction is the sum of all the learners. It keeps helping only while the leftover error has structure the learner can capture; once what is left is mostly noise, extra rounds fit the noise, so the number of rounds is chosen on validation data (early stopping). |
+| The "bootstrap" portion of "bootstrap aggregation" helps train base estimators that have seen less overlapping data, hence they will have less correlated errors. | Bootstrapping gives each tree its own training set (about 63% of the distinct rows, some repeated), so unstable members like deep trees grow differently and their errors are less correlated than if all saw the same data, which would make them identical ([ρ](#3-bias-and-variance-in-one-page) = 1). The samples still overlap heavily, so ρ stays well above 0 (≈ 0.47 in [section 11 of `00-ensemble-learning/bias_variance_trees.ipynb`](00-ensemble-learning/bias_variance_trees.ipynb)), which is why [random forests also subsample features](00-ensemble-learning/bias_variance_trees.ipynb#feature-subsampling). On 20 features that lowers ρ further (0.127 → 0.070 when many features carry the signal), but when only one does, each tree gets so much worse that the bias almost triples (section 11.9). Each tree is slightly worse for seeing fewer distinct rows, and stable members like linear regression barely change across samples, so bootstrapping them barely decorrelates them. |
 
 ---
 
@@ -345,6 +347,15 @@ can read them on GitHub without running anything.
   mathematics of bagging, boosting, random forests and ensembles.
 * Zhi-Hua Zhou, *Ensemble Methods: Foundations and Algorithms* (2012) — a whole book on the topic.
 * scikit-learn user guide, *Ensembles: Gradient boosting, random forests, bagging, voting, stacking*.
+* **Several targets at once** (section 14):
+  * Krzysztof Dembczyński, Willem Waegeman, Weiwei Cheng & Eyke Hüllermeier, *Regret Analysis for Performance
+    Metrics in Multi-Label Classification: The Case of Hamming and Subset Zero-One Loss*, ECML PKDD (2010), and the
+    longer *On Label Dependence and Loss Minimization in Multi-Label Classification*, Machine Learning 88 (2012).
+    Hamming loss "can in principle be minimized without taking conditional label dependence into account"; subset
+    accuracy cannot.
+  * scikit-learn user guide, *Multiclass and multioutput algorithms*. It covers the wrappers (`MultiOutputRegressor`,
+    `ClassifierChain`, …) and the estimators that accept a 2-D target natively. It also notes that
+    `MultiOutputRegressor` "can not take advantage of correlations between targets".
 * Each technique README lists its own sources.
 
 ---
@@ -546,6 +557,194 @@ boosting. Test MSE inside the training range, same data as 13.1:
 **Suggested wording for disadvantage 6:** "…the combination gains nothing or gets worse (voting: `01-voting/`
 §8.2–8.3; bagging a stable model: `02-bagging/` §8.1; boosting too weak or too strong a member: `04-adaboost/`
 §8.3–8.4)."
+
+---
+
+## 14. Several targets at once: multi-output regression and multi-label classification
+
+> **Status: for review.**
+>
+> * The measurements below come from scratch scripts run on 2026-11-20 (Python 3.13.3, NumPy 2.5.5,
+>   scikit-learn 1.9.1, synthetic data, 100 trees per forest). They are not in this repository yet.
+> * Each technique's lab has a TODO section for its own version (14.5).
+> * The literature on each technique is in that technique README's *Further reading* ("Several targets at once").
+>   The general sources are in section 11.
+
+### 14.1 The problem
+
+* **Multi-output (multi-target) regression.** Each row has k numbers to predict, so `y` is an n × k table. Example:
+  a flat's sale price *and* its monthly rent, from the same features.
+* **Multi-label classification.** Each row can carry several labels at once, so `y` is an n × L table of 0/1.
+  Example: a film that is both "comedy" and "sci-fi".
+* **Multi-class multi-output.** Several label columns, each with more than two classes.
+
+There are three ways to build a model for this:
+
+| Design | What it is | scikit-learn |
+|---|---|---|
+| One model per target ("local"; for labels also called *binary relevance*) | k independent models | `MultiOutputRegressor`, `MultiOutputClassifier` |
+| One model for all targets ("global") | one tree serves every target: each leaf stores one value per target | trees and forests given a 2-D `y` |
+| Chains | one model per target, each also seeing the targets before it as inputs | `RegressorChain`, `ClassifierChain` |
+
+Multi-label predictions $\hat y$ for n rows and L labels are scored in two ways:
+
+$$\text{Hamming loss} = \frac{1}{nL}\sum_{i=1}^{n}\sum_{l=1}^{L}\mathbb 1[\hat y_{il} \ne y_{il}], \qquad
+\text{subset accuracy} = \frac{1}{n}\sum_{i=1}^{n}\mathbb 1[\hat y_{il} = y_{il} \text{ for every } l].$$
+
+Hamming loss is the share of wrong (row, label) cells (`hamming_loss`). Subset accuracy is the share of rows whose
+**whole** label set is right (`accuracy_score` on a 2-D `y`).
+
+### 14.2 How one tree serves several targets
+
+* **Regression.** A node's impurity is the average of the targets' mean squared errors:
+
+  $$\text{impurity}(\text{node}) = \frac{1}{k}\sum_{j=1}^{k}\frac{1}{n_{\text{node}}}\sum_{i \in \text{node}}(y_{ij} - \bar y_j)^2 .$$
+
+  The chosen split is therefore the one with the largest drop in squared error **added over all targets**, and each
+  leaf stores the mean of each target. A check on 3 targets confirmed it:
+  * scikit-learn's root impurity (0.228735) equals the mean of the three targets' variances;
+  * an exhaustive search for the largest summed drop picks the same split as scikit-learn's stump.
+* **Classification.** The Gini impurity is computed per label and averaged. Each leaf stores each label's class
+  fractions, and `predict_proba` returns a list of L arrays, one per label.
+* Every node draws **one** random feature subset, shared by all targets.
+
+What follows from this:
+
+1. **Raw scale counts.** The target with the largest variance dominates the summed drop.
+   * In the check above, the shared stump split where the largest-variance target wanted (variance 0.53, against
+     0.10 and 0.06).
+   * Multiplying another target by 100 moved the split to *that* target's own best split.
+   * So standardise the targets before fitting one shared forest. The predictive clustering trees of the literature
+     do this internally.
+2. **Rare labels get little say.** A label that is rarely 1 has a small Gini, so it adds little to the average.
+   With label prevalences 0.77, 0.62, 0.46, 0.31 and 0.16:
+
+   | Model | F1, second-rarest label | F1, rarest label |
+   |---|---|---|
+   | Shared forest | 0.560 | 0.249 |
+   | One forest per label | 0.590 | 0.312 |
+3. **Bigger classification trees.** A leaf stops only when it is pure for *every* label. Shared multi-label trees
+   averaged about 700–890 nodes, against 226–350 for single-label trees.
+
+### 14.3 Does one model for all targets mix them up?
+
+**The cost.** One split must serve every target. For target A, a split chosen for target B is a split on a feature
+that is noise to A: the same harm that irrelevant features do to k-NN.
+
+**The possible gain.** Every split is chosen with the evidence of all k targets, which removes noise. That pays off
+only when the targets want the same splits.
+
+**Regression, measured.** The setup:
+
+* 4 targets, 12 features, 500 training rows, 10 seeds.
+* Each target has signal variance 1 and noise standard deviation 0.7, so no model can get below a test MSE of 0.49.
+* **Gap** = (shared MSE − per-target MSE) / (per-target MSE − 0.49). It is the shared forest's extra error as a share
+  of the error that could still be removed; negative means the shared forest is better.
+
+| Targets | Gap for y0, y1, y2, y3 | Seeds where the shared forest wins (of 10) |
+|---|---|---|
+| share one signal (correlation ±0.67) | −4.8 %, −1.2 %, +1.5 %, −1.1 % | 9, 6, 4, 5 |
+| same features, different functions (correlation 0.27–0.40) | −5.7 %, +10.6 %, +3.3 %, +10.4 % | 8, 1, 2, 1 |
+| different features (correlation ≈ 0) | +125.8 %, +156.1 %, +130.7 %, +146.9 % | 0, 0, 0, 0 |
+
+The shared forest always cost about a quarter:
+
+| | Trees | Nodes | Fit time |
+|---|---|---|---|
+| Shared forest | 100 | 63,220 | 0.12 s |
+| One forest per target | 400 | 252,880 | 0.46–0.49 s |
+
+**When the targets share one signal, the gain grows with noise and shrinks with data.** The sweep below gives the gap
+averaged over the 4 targets, with 10 seeds per cell. At noise 1.4 and 2.8 the shared forest is ahead on all four
+targets; at 0.35 and 0.7 the per-target differences have mixed signs and are within seed-to-seed noise.
+
+| Noise sd (target correlation) | n_train = 100 | 500 | 2000 |
+|---|---|---|---|
+| 0.35 (0.89) | −1.0 % | −0.8 % | −0.5 % |
+| 0.7 (0.67) | −3.6 % | −1.5 % | −1.6 % |
+| 1.4 (0.34) | −12.7 % | −6.6 % | −7.1 % |
+| 2.8 (0.11) | −22.9 % | −16.5 % | −15.0 % |
+
+The correlation between the target columns is a poor guide: it is lowest (0.11) exactly where sharing helps most.
+What matters is whether the targets want the same splits.
+
+**The "label interaction" argument.** A tree captures *feature* interaction because one path splits on feature A and
+then on feature B. The label version would be "use label A to predict label B", and a shared tree never does that:
+each leaf stores each label's fraction separately, and each label is thresholded on its own.
+
+* Label dependence needs **chains**, whose models see the other labels.
+* For Hamming loss it cannot help even in principle. The best prediction of each cell needs only that label's own
+  probability. Dependence can help only subset accuracy (Dembczyński et al., section 11).
+
+**Multi-label, measured.** The setup:
+
+* 5 labels, 1000 training rows, 5 seeds.
+* Every model is compared with one 100-tree forest per label. For Hamming loss, negative is better; for subset
+  accuracy, positive is better.
+* The ensemble of classifier chains (ECC) has 2,500 trees. The 500-tree control shows how much of a gain comes only
+  from having more trees.
+
+| Labels | Shared forest (Hamming / subset) | One chain (Hamming / subset) | ECC, 5 chains (Hamming / subset) | 500 trees per label (Hamming / subset) |
+|---|---|---|---|---|
+| unrelated (own features) | +0.0205 / −0.0486 | +0.0009 / −0.0021 | −0.0011 / +0.0023 | −0.0025 / +0.0052 |
+| one shared latent, prevalence 0.77 … 0.16 | +0.0021 / −0.0147 | +0.0058 / −0.0015 | −0.0032 / +0.0113 | −0.0029 / +0.0063 |
+| `make_multilabel_classification` | +0.0047 / +0.0009 | +0.0067 / +0.0230 | −0.0017 / +0.0322 | −0.0029 / +0.0068 |
+| 5 noisy copies of one label | −0.0020 / +0.0108 | −0.0057 / +0.0276 | −0.0130 / +0.0288 | −0.0043 / +0.0078 |
+
+* **Unrelated labels:** the shared forest loses on every label (accuracy 0.019–0.025 lower) and on every seed.
+* **`make_multilabel_classification`:** the chains raise subset accuracy (+0.023 and +0.032, on 5 of 5 seeds)
+  without beating the control on Hamming loss, as the theory says.
+* **Copies:** the chains also lowered Hamming loss beyond the control, although the labels are independent once x is
+  known, by construction. One unverified explanation: the chain's earlier predictions act as extra, learned features
+  (a stacking effect), not as label dependence.
+
+**Verdict.**
+
+* The "interaction" argument is weak.
+* The "shared signal, less noise" argument holds only when the targets want the same splits and each target is
+  noisy with little data.
+* On real benchmarks, shared and per-target tree ensembles were equally accurate (Kocev et al.,
+  [`03-random-forest/` Further reading](03-random-forest/README.md#12-further-reading)). So the main reason to share
+  is speed and size.
+
+It is the trade-off of multi-task learning: sharing helps related tasks and hurts unrelated ones.
+
+### 14.4 Limitations in the libraries
+
+Behaviour in scikit-learn 1.9.1, tested; XGBoost, LightGBM and CatBoost from their documentation:
+
+| Estimator | 2-D target? | Notes |
+|---|---|---|
+| `DecisionTree*`, `RandomForest*`, `ExtraTrees*` | yes: one model for all targets | `monotonic_cst` raises "not supported with multiple outputs" |
+| `BaggingRegressor` | yes: one ensemble of multi-output trees | `oob_score=True` crashes with a broadcast error; `RandomForestRegressor(oob_score=True)` works |
+| `BaggingClassifier` | no (`y should be a 1d array`) | wrap in `MultiOutputClassifier` |
+| `VotingRegressor`, `StackingRegressor`, `StackingClassifier` | no (`y should be a 1d array`) | wrap, or average by hand the outputs of members that accept a 2-D target |
+| `VotingClassifier` | no (`NotImplementedError` for multi-label) | wrap |
+| `AdaBoost*`, `GradientBoosting*`, `HistGradientBoosting*` | no (`y should be a 1d array`) | wrap: one boosted model per target |
+| XGBoost | experimental, since 1.6 | one tree per target per round by default; trees with one leaf value per target since 2.0 |
+| LightGBM | no | wrap |
+| CatBoost | yes | `MultiRMSE`; `MultiLogloss` / `MultiCrossEntropy` |
+
+Other limits of one model for all targets:
+
+* **One set of hyper-parameters** (depth, leaf size, `max_features`) serves every target. Per-target models can tune
+  each one.
+* **One `feature_importances_` vector** for all targets, so there are no per-target importances.
+* **`accuracy_score` refuses multi-class multi-output targets** ("multiclass-multioutput is not supported"). Score
+  each column separately.
+
+### 14.5 What each lab will show
+
+Each lab README ends with a red **TODO** section listing these:
+
+| Technique | Lab | To show |
+|---|---|---|
+| Voting | [`01-voting/lab/`](01-voting/lab/README.md) | the wrappers; out-of-fold weights per target; ensembles of classifier chains |
+| Bagging | [`02-bagging/lab/`](02-bagging/lab/README.md) | one ensemble vs k; the `BaggingClassifier` workaround; the OOB crash and a hand-computed OOB score |
+| Random forest | [`03-random-forest/lab/`](03-random-forest/lab/README.md) | one forest vs one per target on three kinds of targets; target scale; rare labels; the summed split score from scratch |
+| AdaBoost | [`04-adaboost/lab/`](04-adaboost/lab/README.md) | one AdaBoost per label vs AdaBoost.MH from scratch |
+| Gradient boosting | [`05-gradient-boosting/lab/`](05-gradient-boosting/lab/README.md) | one tree per target per round vs one multi-output tree per round, from scratch |
+| XGBoost | [`06-xgboost/lab/`](06-xgboost/lab/README.md) | `one_output_per_tree` vs `multi_output_tree`; multi-label `XGBClassifier`; the vector-leaf gain |
 
 ---
 

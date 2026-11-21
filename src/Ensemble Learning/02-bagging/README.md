@@ -666,6 +666,19 @@ claim are in **[`lab/README.md`](lab/README.md)**.
 * scikit-learn user guide, *Bagging meta-estimator*, and the source `sklearn/ensemble/_bagging.py` (how bootstrap counts
   are passed as `sample_weight`; how OOB scores are computed).
 * Bradley Efron, *Bootstrap Methods: Another Look at the Jackknife*, Annals of Statistics (1979) — the bootstrap itself.
+* **Several targets at once** (multi-output regression, multi-label classification). In scikit-learn 1.9.1,
+  `BaggingRegressor` accepts a 2-D target: one ensemble whose trees each predict every target. `BaggingClassifier`
+  rejects a 2-D target.
+  * Dragi Kocev, Celine Vens, Jan Struyf & Sašo Džeroski, *Tree Ensembles for Predicting Structured Outputs*,
+    Pattern Recognition 46(3) (2013). The study compares bagging (and random forests) of predictive clustering trees
+    on multi-target regression, multi-target classification and hierarchical multi-label datasets.
+    * One ensemble for all targets and one ensemble per target were not significantly different in accuracy.
+    * Bagging one ensemble for all targets was 3.9 times faster to build and 2.9 times smaller than bagging one
+      ensemble per target.
+  * Eleftherios Spyromitros-Xioufis, Grigorios Tsoumakas, William Groves & Ioannis Vlahavas, *Multi-target
+    Regression via Input Space Expansion: Treating Targets as Inputs*, Machine Learning 104(1) (2016). With bagged
+    trees as the base learner, independent per-target models were not significantly beaten by any multi-target
+    method tested. The authors attribute this to "a very strong base regressor".
 
 ---
 

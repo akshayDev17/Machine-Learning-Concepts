@@ -130,3 +130,15 @@ Both notebooks end with a **Summary** table.
 If your numbers differ in the third decimal place from the saved outputs, that is due to library versions and is
 fine; timings differ from machine to machine. If a lab errors, re-run the imports cell and the labs above it — most
 errors mean a variable from an earlier lab is missing.
+
+## <font color="red">TODO: several targets at once (multi-output regression, multi-label classification)</font>
+
+Not done yet. This lab should show XGBoost's two multi-output modes (experimental). Sources are in the README's
+Further reading ("Several targets at once").
+The problem and the library limits are in [section 14 of the folder README](../../README.md#14-several-targets-at-once-multi-output-regression-and-multi-label-classification).
+
+- [ ] `multi_strategy="one_output_per_tree"` (the default) vs `"multi_output_tree"` (vector leaves, `tree_method="hist"`).
+  Compare per-target error, number of trees and fit time, on related vs unrelated targets.
+- [ ] Multi-label: `XGBClassifier` on a 2-D 0/1 target. Report Hamming loss, subset accuracy and per-label scores.
+- [ ] From scratch: find how a vector-leaf split's gain combines the targets' G and H (README 4.3–4.5), and check the
+  formula against xgboost's trees.
