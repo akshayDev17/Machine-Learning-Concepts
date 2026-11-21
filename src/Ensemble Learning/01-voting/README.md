@@ -643,7 +643,10 @@ w = res.x
     ([scipy docs](https://docs.scipy.org/doc/scipy/tutorial/optimize.html#local-minimization-solver-comparison)).
   * Smooth scores: squared error, log loss.
   * Scores with jumps (accuracy, F1, the error of a hard vote): use forward selection (6.3.2) instead.
-  * scipy's docs list no failure cases; the last point follows from the gradient-based design.
+    * To weight a hard vote anyway, fit the weights on the soft vote's log loss and pass them to
+      `VotingClassifier(voting="hard", weights=w)`. They are not tuned for the hard vote, so nothing guarantees they
+      suit it.
+  * scipy's docs list no failure cases; the point about jumps follows from the gradient-based design.
 * With either loss and these constraints, the loss surface over the weights is a single bowl, so there is no wrong
   valley to get stuck in. Its bottom is often flat, though: quite different weights can give almost the same loss.
   Read the exact values loosely.
