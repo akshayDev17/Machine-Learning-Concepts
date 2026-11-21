@@ -1,0 +1,156 @@
+# Feature-engineering pipeline for the customer-churn table (balanced binary target).
+#
+# Stages run top to bottom. Each stage lives in a file NN_<name>.py next to this config.
+# To switch a stage off, set `enabled: false` and re-run:
+#     python run_pipeline.py --config config.yml
+# Stages marked `required: true` can't be switched off (the runner explains why if you try).
+# Every stage is fitted on training rows only, and re-fitted inside every cross-validation fold.
+
+random_state: 42
+
+stages:
+  - name: load_data
+    required: true
+    enabled: true
+    params:
+      path: ../data/customer_churn.csv     # relative to this config file
+      target: churned
+
+  - name: split_data
+    required: true
+    enabled: true
+    params:
+      test_size: 0.2                       # 20 % locked away as the final test
+      stratify: true                       # keep the 50 / 50 churn share in both parts
+      cv_folds: 5                          # cross-validation folds inside the training part
+
+  - name: drop_useless_columns
+    enabled: true
+    params:
+      id_unique_ratio: 0.95                # text column with >= 95 % distinct values -> treated as an ID
+      drop_constant: true
+      drop_duplicates: true
+
+  - name: remove_leakage
+    enabled: true
+    params:
+      columns: [retention_call_made]       # known after the outcome; confirmed by domain knowledge
+      warn_auc_above: 0.9                  # flag (don't drop) any other column this predictive on its own
+
+  - name: fix_data_types
+    enabled: true
+    params:
+      money_columns: [monthly_charges, monthly_fee]
+      yes_no_columns: [is_senior]
+      tidy_columns: [payment_method, region, device, plan, city, support_note]   # strip, lower-case, "_" -> " "
+      valid_ranges:
+        age: [15, 100]                     # anything outside is a typo -> treated as missing
+
+  - name: make_date_features
+    enabled: true
+    params:
+      date_columns: [signup_date, last_login_date]
+      reference_date: "2025-01-01"         # the day the data was exported
+      cyclical_month: true                 # month as (sin, cos) so December sits next to January
+      cyclical_weekday: false
+
+  - name: make_domain_features
+    enabled: true
+    params:
+      ratios:
+        - {name: charges_to_income, numerator: monthly_charges, denominator: monthly_income}
+      differences:
+        - {name: active_lifetime_days, left: signup_date_days_since, right: last_login_date_days_since}
+      group_stats:
+        - {name: income_vs_city_median, column: monthly_income, by: city, stat: median}
+      keyword_flags:
+        column: support_note
+        words: [billing, slow, crash, thanks, love]
+        drop_text_column: true
+
+  - name: impute_missing
+    enabled: true
+    params:
+      numeric_strategy: median             # median | mean
+      text_strategy: constant              # constant (the word "missing") | most_frequent
+      add_missing_flags: true
+      flag_min_rate: 0.01                  # add a flag only for columns with >= 1 % missing in train
+
+  - name: cap_outliers
+    enabled: true
+    params:
+      method: quantile                     # quantile | iqr
+      lower_quantile: 0.01
+      upper_quantile: 0.99
+      iqr_factor: 1.5                      # used when method: iqr
+      min_unique: 20                       # only continuous columns (skips flags, codes, sin/cos)
+
+  - name: transform_skewed
+    enabled: true
+    params:
+      method: yeo-johnson                  # yeo-johnson | box-cox | log1p
+      skew_threshold: 1.0                  # transform columns with |skewness| above this
+      min_unique: 20
+
+  - name: group_rare_categories
+    enabled: true
+    params:
+      min_share: 0.01                      # categories in < 1 % of training rows -> "other"
+      other_label: other
+
+  - name: encode_categoricals
+    enabled: true
+    params:
+      ordinal:
+        plan: [basic, standard, premium]
+      max_onehot_levels: 10                # more levels than this counts as "many categories"
+      high_cardinality: target             # target | frequency | onehot
+      target_cv_folds: 5                   # cross-fitting folds for target encoding
+
+  - name: add_interactions
+    enabled: true
+    params:
+      products:
+        - [plan, num_support_calls]        # support problems hurt premium customers more
+      squares: [age]                       # U-shaped effect of age
+
+  - name: bin_numeric
+    enabled: true
+    params:
+      columns: [age]
+      n_bins: 5
+      strategy: quantile                   # quantile (equal counts) | uniform (equal widths)
+      keep_original: true
+
+  - name: drop_correlated
+    enabled: true
+    params:
+      threshold: 0.95                      # drop the later column of any pair with |r| above this
+
+  - name: reduce_dimensions
+    enabled: true
+    params:
+      method: pca                          # pca | lda
+      columns_prefix: survey_q             # the block of columns to compress
+      n_components: 1                      # pca only: an int, or a share of variance such as 0.8
+      output_prefix: survey
+
+  - name: select_features
+    enabled: true
+    params:
+      method: l1                           # l1 (embedded) | mutual_info (filter) | rfe (wrapper)
+      C: 0.05                              # l1 only: smaller C -> fewer columns kept
+      k: 25                                # mutual_info / rfe only: number of columns to keep
+
+  - name: scale_numeric
+    enabled: true
+    params:
+      method: standard                     # standard | robust | minmax
+
+  - name: train_and_evaluate
+    required: true
+    enabled: true
+    params:
+      model: logistic_regression           # logistic_regression | knn | random_forest | hist_gradient_boosting
+      C: 1.0                               # logistic_regression only
+      n_neighbors: 25                      # knn only
